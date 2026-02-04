@@ -62,7 +62,7 @@
         #fab-mute {
             position: fixed; top: 15px; right: 15px; width: 45px; height: 45px; 
             border-radius: 50%; background: #333; color: #fff; border: 1px solid #555;
-            display: flex; align-items: center; justify-content: center; z-index: 100;
+            display: flex; align-items: center; justify-content: center; z-index: 100; cursor: pointer;
         }
         #fab-mute.muted { background: var(--error); border-color: var(--error); }
 
@@ -75,7 +75,7 @@
 
         .link-box {
             background: #000; color: lime; padding: 10px; font-family: monospace; 
-            font-size: 0.75rem; word-break: break-all; border-radius: 5px; cursor: pointer; border: 1px dashed #444;
+            font-size: 0.75rem; word-break: break-all; border-radius: 5px; cursor: pointer; border: 1px dashed #444; margin-top: 10px;
         }
     </style>
 </head>
@@ -87,15 +87,16 @@
         <h1 style="text-align: center; color: var(--accent);">Cards Against<br>Sanskaar</h1>
         
         <div id="host-form" class="panel">
-            <h3><i class="fas fa-crown"></i> Create Room</h3>
+            <h3><i class="fas fa-crown"></i> Create Secure Room</h3>
+            <p style="font-size: 0.8rem; color: #aaa;">API Key is encrypted in the link and never stored.</p>
             <input type="password" id="api-key" placeholder="Paste Gemini API Key">
             <input type="text" id="host-name" placeholder="Your Name">
-            <button class="btn" onclick="startHostFlow()">Create Secure Lobby</button>
+            <button class="btn" onclick="startHostFlow()">Create Room</button>
         </div>
 
         <div id="join-form" class="panel hidden">
             <h3><i class="fas fa-user-plus"></i> Join Room</h3>
-            <p style="color: lime; font-size: 0.8rem;">Session Key Decrypted ✅</p>
+            <p style="color: lime; font-size: 0.8rem; margin-bottom: 15px;">Session Key Decrypted ✅</p>
             <input type="text" id="join-name" placeholder="Your Name">
             <button class="btn" onclick="startJoinFlow()">Join Lobby</button>
         </div>
@@ -110,15 +111,16 @@
             <div id="player-list" style="margin: 20px 0; min-height: 50px;"></div>
 
             <div id="host-controls" class="hidden">
+                <p style="font-size:0.8rem; color:#888;">Tap link below to copy & send:</p>
                 <div class="link-box" id="share-link" onclick="copyLink()">Generating Link...</div>
-                <p style="font-size:0.8rem; color:#888;">Tap link to copy & send to friends</p>
-                <div style="margin-top: 20px;">
+                
+                <div style="margin-top: 25px; border-top: 1px solid #333; padding-top: 20px;">
                     <label>Rounds: <input type="number" id="rounds-input" value="5" style="width: 60px; display:inline-block;"></label>
                     <button id="btn-start" class="btn" onclick="startGame()" disabled>Wait for Players</button>
                 </div>
             </div>
 
-            <p id="client-wait" class="hidden">Waiting for Host to start...</p>
+            <p id="client-wait" class="hidden" style="color: #888;">Waiting for Host to start...</p>
         </div>
     </div>
 
@@ -139,11 +141,11 @@
     </div>
 
     <script>
-        // --- STATE ---
+        // --- GLOBAL STATE ---
         let peer, myId, myName, hostId;
         let isHost = false;
         let sessionKey = "";
-        let players = []; // {id, name, score}
+        let players = []; 
         let connections = {}; // Host: id -> conn
         let hostConn; // Client: conn to host
         
@@ -156,7 +158,8 @@
         // --- 1. SETUP FLOW ---
 
         window.onload = () => {
-            if(window.location.hash.length > 5) {
+            // Check if this is a join link
+            if(window.location.hash.length > 10) {
                 document.getElementById('host-form').classList.add('hidden');
                 document.getElementById('join-form').classList.remove('hidden');
             }
@@ -167,13 +170,13 @@
             myName = document.getElementById('host-name').value.trim();
             if(!key || !myName) return alert("Fill all fields");
             
-            // Audio Trigger (Must be in click event)
+            // Fix: Initialize Audio on CLICK
             await initAudio();
 
             sessionKey = key;
             isHost = true;
             
-            // UI Transition
+            // Fix: Immediately show Lobby, Hide Setup
             document.getElementById('screen-setup').classList.add('hidden');
             document.getElementById('screen-lobby').classList.remove('hidden');
             document.getElementById('host-controls').classList.remove('hidden');
@@ -188,14 +191,12 @@
                 renderLobby();
             });
             
-            // Host Logic
             peer.on('connection', (conn) => {
                 conn.on('open', () => {
                     conn.on('data', (data) => handleHostData(data, conn));
                 });
             });
             
-            // Host Audio
             peer.on('call', call => {
                 call.answer(localStream);
                 call.on('stream', playAudio);
@@ -206,6 +207,7 @@
             myName = document.getElementById('join-name').value.trim();
             if(!myName) return alert("Enter Name");
             
+            // Fix: Initialize Audio on CLICK
             await initAudio();
 
             try {
@@ -219,7 +221,7 @@
                 sessionKey = bytes.toString(CryptoJS.enc.Utf8);
                 if(!sessionKey) throw new Error();
 
-                // UI Transition
+                // Show Lobby
                 document.getElementById('screen-setup').classList.add('hidden');
                 document.getElementById('screen-lobby').classList.remove('hidden');
                 document.getElementById('client-wait').classList.remove('hidden');
@@ -240,7 +242,7 @@
                     call.on('stream', playAudio);
                 });
 
-            } catch(e) { alert("Invalid Link"); }
+            } catch(e) { alert("Invalid Link or Decryption Failed"); }
         }
 
         function generateLink(id) {
@@ -265,16 +267,13 @@
                     broadcast({type: 'LOBBY_UPDATE', players: players});
                 }
             } else {
-                // Forward Game Logic
                 processGameLogic(data, data.id || conn.peer);
             }
         }
 
         function broadcast(msg) {
-            // Update Self
-            handleClientData(msg);
-            // Send to Others
-            Object.values(connections).forEach(c => c.send(msg));
+            handleClientData(msg); // Update Host UI
+            Object.values(connections).forEach(c => c.send(msg)); // Update Clients
         }
 
         // --- 3. CLIENT LOGIC ---
@@ -316,15 +315,17 @@
                 `<span class="player-badge">${p.name}</span>`
             ).join('');
             
-            // Enable Start Button if Host + >1 Player
+            // Update Start Button State
             if(isHost) {
                 const btn = document.getElementById('btn-start');
                 if(players.length > 1) {
                     btn.disabled = false;
                     btn.innerText = "START GAME";
+                    btn.style.background = "var(--success)";
                 } else {
                     btn.disabled = true;
-                    btn.innerText = "Wait for Players";
+                    btn.innerText = "Wait for Players (Need 2+)";
+                    btn.style.background = "#555";
                 }
             }
         }
@@ -335,7 +336,6 @@
             const rounds = document.getElementById('rounds-input').value;
             broadcast({type: 'TOAST', msg: 'Generating...'});
             
-            // Call API
             generateDeck(players.length, rounds).then(deck => {
                 window.serverDeck = deck;
                 players.forEach(p => {
@@ -345,7 +345,7 @@
                     else connections[p.id].send(msg);
                 });
                 startRound(1);
-            }).catch(e => alert("API Error: " + e));
+            }).catch(e => alert("API Error. Check Key."));
         }
 
         function startRound(n) {
@@ -470,10 +470,12 @@
 
         async function initAudio() {
             try {
+                // Request Mic - Must happen on button click
                 localStream = await navigator.mediaDevices.getUserMedia({audio: true});
                 console.log("Mic Active");
             } catch(e) {
-                console.error("Mic denied");
+                console.error("Mic denied or error", e);
+                // Allow game to continue even without audio
                 document.getElementById('fab-mute').style.display = 'none';
             }
         }
@@ -482,14 +484,14 @@
             const a = document.createElement('audio');
             a.srcObject = stream;
             a.autoplay = true;
-            a.playsInline = true;
+            a.playsInline = true; // IMPORTANT FOR MOBILE
             document.body.appendChild(a);
         }
 
         function toggleMute() {
             if(!localStream) return;
             const t = localStream.getAudioTracks()[0];
-            t.enabled = !t.enabled;
+            t.enabled = !t.enabled; // Toggle logic
             isMuted = !t.enabled;
             const btn = document.getElementById('fab-mute');
             if(isMuted) {
