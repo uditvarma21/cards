@@ -405,7 +405,7 @@
         // --- FIXED API CALL ---
         async function generateDeck(x, y) {
             const prompt = `Generate ONLY valid JSON for Cards Against Humanity (Indian Context). Do not include any text before or after the JSON. Format: {"blackCards": ["prompt 1", "prompt 2"], "whiteCards": ["answer 1", "answer 2"]}. Generate ${y} black cards with blanks (____), ${Math.floor(6*x*y/5)+10*x} white cards. ONLY output the JSON, nothing else.`;
-            const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${sessionKey}`, {
+            const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${sessionKey}`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
