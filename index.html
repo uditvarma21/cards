@@ -16,7 +16,8 @@
         }
 
         body { 
-            font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            background: var(--bg); color: var(--text); 
             margin: 0; padding: 20px; padding-bottom: 80px; 
         }
         .hidden { display: none !important; }
@@ -25,70 +26,94 @@
         .btn { 
             padding: 15px; width: 100%; border-radius: 30px; border: none; 
             background: var(--accent); color: #000; font-weight: bold; font-size: 1rem; 
-            margin: 10px 0; cursor: pointer; transition: 0.2s;
+            margin: 10px 0; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.3);
         }
         .btn:active { transform: scale(0.98); }
         .btn:disabled { background: #555; color: #888; cursor: not-allowed; }
 
         input { 
             padding: 15px; width: 100%; border-radius: 8px; border: 1px solid #444; 
-            background: #252525; color: #fff; box-sizing: border-box; text-align: center; font-size: 1rem; margin-bottom: 10px;
+            background: #252525; color: #fff; box-sizing: border-box; text-align: center; 
+            font-size: 1rem; margin-bottom: 10px;
         }
 
         .panel { 
             background: var(--panel); padding: 25px; border-radius: 15px; 
-            max-width: 500px; margin: 0 auto; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            max-width: 500px; margin: 0 auto; text-align: center; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5); border: 1px solid #333;
         }
 
         /* Lobby Items */
         .player-badge {
             background: #333; padding: 8px 15px; border-radius: 20px; 
-            margin: 5px; display: inline-block; font-size: 0.9rem; border: 1px solid #444;
+            margin: 5px; display: inline-block; font-size: 0.9rem; border: 1px solid #444; color: white;
         }
 
-        /* Cards Grid */
-        .card-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 20px; }
-        @media (min-width: 768px) { .card-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); } }
+        /* Cards Grid - Fixed for Laptop */
+        .card-grid { 
+            display: grid; 
+            grid-template-columns: repeat(2, 1fr); 
+            gap: 15px; 
+            margin-top: 20px; 
+            padding-bottom: 50px;
+        }
+        @media (min-width: 768px) { 
+            .card-grid { 
+                grid-template-columns: repeat(4, 1fr); /* Force 4 columns on desktop */
+                max-width: 1000px;
+                margin: 20px auto;
+            } 
+        }
 
         .card { 
-            background: #fff; color: #000; aspect-ratio: 2/3; padding: 10px; 
-            border-radius: 8px; display: flex; align-items: center; justify-content: center; 
-            text-align: center; font-size: 0.85rem; font-weight: bold; cursor: pointer; user-select: none;
+            background: #fff; color: #000; aspect-ratio: 2/3; padding: 15px; 
+            border-radius: 10px; display: flex; align-items: center; justify-content: center; 
+            text-align: center; font-size: 0.9rem; font-weight: bold; cursor: pointer; 
+            user-select: none; transition: transform 0.1s;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            overflow-wrap: break-word;
         }
-        .card.black { background: #000; color: #fff; border: 2px solid #333; grid-column: 1 / -1; min-height: 120px; font-size: 1.1rem; }
-        .card.selected { border: 4px solid var(--accent); background: #f0f0f0; transform: scale(0.98); }
-
-        /* Floating Buttons */
-        #fab-mute {
-            position: fixed; top: 15px; right: 15px; width: 45px; height: 45px; 
-            border-radius: 50%; background: #333; color: #fff; border: 1px solid #555;
-            display: flex; align-items: center; justify-content: center; z-index: 100; cursor: pointer;
+        .card:hover { transform: translateY(-2px); }
+        .card.black { 
+            background: #000; color: #fff; border: 2px solid #fff; 
+            grid-column: 1 / -1; min-height: 150px; font-size: 1.3rem; 
         }
-        #fab-mute.muted { background: var(--error); border-color: var(--error); }
+        .card.selected { 
+            border: 4px solid var(--accent); background: #f0f0f0; transform: scale(0.95); 
+        }
+        .card.vote-winner { border: 4px solid var(--success); box-shadow: 0 0 15px var(--success); }
 
+        /* Floating Submit */
         #fab-submit {
-            position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; 
+            position: fixed; bottom: 30px; right: 30px; width: 70px; height: 70px; 
             border-radius: 50%; background: var(--success); border: none; z-index: 90;
-            display: flex; align-items: center; justify-content: center; font-size: 1.5rem;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            display: flex; align-items: center; justify-content: center; font-size: 2rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5); cursor: pointer;
         }
 
         .link-box {
-            background: #000; color: lime; padding: 10px; font-family: monospace; 
-            font-size: 0.75rem; word-break: break-all; border-radius: 5px; cursor: pointer; border: 1px dashed #444; margin-top: 10px;
+            background: #000; color: lime; padding: 12px; font-family: 'Courier New', monospace; 
+            font-size: 0.8rem; word-break: break-all; border-radius: 6px; cursor: pointer; 
+            border: 1px dashed #444; margin-top: 15px;
+        }
+
+        /* Modal Overlay */
+        #modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.92); z-index: 200;
+            display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
+            padding-top: 50px; overflow-y: auto;
         }
     </style>
 </head>
 <body>
 
-    <button id="fab-mute" onclick="toggleMute()"><i class="fas fa-microphone"></i></button>
-
     <div id="screen-setup">
-        <h1 style="text-align: center; color: var(--accent);">Cards Against<br>Sanskaar</h1>
+        <h1 style="text-align: center; color: var(--accent); font-size: 3rem; margin-bottom: 10px;">Cards Against<br>Sanskaar</h1>
         
         <div id="host-form" class="panel">
             <h3><i class="fas fa-crown"></i> Create Secure Room</h3>
-            <p style="font-size: 0.8rem; color: #aaa;">API Key is encrypted in the link and never stored.</p>
+            <p style="font-size: 0.8rem; color: #aaa; margin-bottom: 20px;">API Key is encrypted in the link and never stored.</p>
             <input type="password" id="api-key" placeholder="Paste Gemini API Key">
             <input type="text" id="host-name" placeholder="Your Name">
             <button class="btn" onclick="startHostFlow()">Create Room</button>
@@ -96,7 +121,7 @@
 
         <div id="join-form" class="panel hidden">
             <h3><i class="fas fa-user-plus"></i> Join Room</h3>
-            <p style="color: lime; font-size: 0.8rem; margin-bottom: 15px;">Session Key Decrypted ✅</p>
+            <p style="color: lime; font-size: 0.9rem; margin-bottom: 15px; font-weight: bold;">Session Key Decrypted ✅</p>
             <input type="text" id="join-name" placeholder="Your Name">
             <button class="btn" onclick="startJoinFlow()">Join Lobby</button>
         </div>
@@ -105,44 +130,59 @@
     <div id="screen-lobby" class="hidden">
         <div class="panel">
             <h2>Lobby</h2>
-            <div id="player-count" style="font-size: 2.5rem; font-weight: bold; color: var(--success);">1</div>
-            <p>Players Online</p>
-            <div id="player-list" style="margin: 20px 0; min-height: 50px;"></div>
+            <div id="player-count" style="font-size: 3rem; font-weight: bold; color: var(--success);">1</div>
+            <p style="color:#888;">Players Online</p>
+            <div id="player-list" style="margin: 20px 0; min-height: 50px; display:flex; flex-wrap:wrap; justify-content:center;"></div>
 
             <div id="host-controls" class="hidden">
-                <p style="font-size:0.8rem; color:#888;">Tap link below to copy & send:</p>
+                <p style="font-size:0.9rem; color:#ccc;">Send this link to friends:</p>
                 <div class="link-box" id="share-link" onclick="copyLink()">Generating Link...</div>
                 
-                <div style="margin-top: 25px; border-top: 1px solid #333; padding-top: 20px;">
-                    <label>Rounds: <input type="number" id="rounds-input" value="5" style="width: 60px; display:inline-block;"></label>
+                <div style="margin-top: 30px; border-top: 1px solid #333; padding-top: 20px;">
+                    <label style="margin-right: 10px;">Rounds: <input type="number" id="rounds-input" value="5" style="width: 60px; display:inline-block; margin:0;"></label>
                     <button id="btn-start" class="btn" onclick="startGame()" disabled>Wait for Players</button>
                 </div>
             </div>
-            <p id="client-wait" class="hidden" style="color: #888;">Waiting for Host to start...</p>
+            <p id="client-wait" class="hidden" style="color: #666; font-style: italic;">Waiting for Host to start...</p>
         </div>
     </div>
 
     <div id="screen-game" class="hidden">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
-            <span>Round <span id="r-curr">1</span>/<span id="r-total">5</span></span>
-            <span style="color: var(--accent);">Score: <span id="my-score">0</span></span>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 15px; max-width: 1000px; margin: 0 auto;">
+            <span style="font-size: 1.1rem; font-weight: bold;">Round <span id="r-curr">1</span>/<span id="r-total">5</span></span>
+            <span style="color: var(--accent); font-size: 1.1rem; font-weight: bold;">Score: <span id="my-score">0</span></span>
         </div>
-        <div id="black-card" class="card black">Loading...</div>
-        <div id="my-hand" class="card-grid"></div>
+        
+        <div style="max-width: 1000px; margin: 0 auto;">
+            <div id="black-card" class="card black">Loading...</div>
+            <p id="status-msg" style="text-align: center; color: #888; margin-top: 10px;">Pick 1 card</p>
+            <div id="my-hand" class="card-grid"></div>
+        </div>
+
         <button id="fab-submit" class="hidden" onclick="submitCard()"><i class="fas fa-check"></i></button>
     </div>
 
-    <div id="screen-voting" class="hidden panel" style="width: 90%; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); z-index:110; height:80vh; overflow-y:auto;">
-        <h2>Vote!</h2>
-        <div id="voting-grid" class="card-grid"></div>
-        <button class="btn" onclick="confirmVote()">Confirm Vote</button>
+    <div id="screen-voting" class="hidden" id="modal-overlay">
+        <div style="width: 90%; max-width: 800px; background: #1a1a1a; padding: 20px; border-radius: 15px; margin: 50px auto; border: 1px solid #333;">
+            <h2 style="text-align: center; color: white;">Vote for the best!</h2>
+            <div id="voting-grid" class="card-grid"></div>
+            <button id="btn-vote" class="btn" style="margin-top: 20px; background: var(--success);" onclick="confirmVote()" disabled>Select a Card to Vote</button>
+        </div>
     </div>
 
     <script>
-        let peer, myId, myName, hostId, isHost = false;
-        let sessionKey = "", players = [], connections = {}, hostConn;
-        let localStream, isMuted = false;
+        // --- STATE ---
+        let peer, myId, myName, hostId;
+        let isHost = false;
+        let sessionKey = "";
+        let players = []; 
+        let connections = {}; // Host: id -> conn
+        let hostConn; // Client: conn to host
+        
+        // Game vars
         let hand = [], selected = [], pickReq = 1;
+
+        // --- 1. SETUP FLOW ---
 
         window.onload = () => {
             if(window.location.hash.length > 10) {
@@ -151,15 +191,15 @@
             }
         };
 
-        async function startHostFlow() {
+        function startHostFlow() {
             const key = document.getElementById('api-key').value.trim();
             myName = document.getElementById('host-name').value.trim();
             if(!key || !myName) return alert("Fill all fields");
             
-            await initAudio();
             sessionKey = key;
             isHost = true;
             
+            // Switch UI immediately
             document.getElementById('screen-setup').classList.add('hidden');
             document.getElementById('screen-lobby').classList.remove('hidden');
             document.getElementById('host-controls').classList.remove('hidden');
@@ -171,22 +211,25 @@
                 players = [{id: myId, name: myName, score: 0}];
                 renderLobby();
             });
+            
             peer.on('connection', (conn) => {
-                conn.on('open', () => conn.on('data', (d) => handleHostData(d, conn)));
+                conn.on('open', () => {
+                    conn.on('data', (data) => handleHostData(data, conn));
+                });
             });
-            peer.on('call', call => { call.answer(localStream); call.on('stream', playAudio); });
         }
 
-        async function startJoinFlow() {
+        function startJoinFlow() {
             myName = document.getElementById('join-name').value.trim();
             if(!myName) return alert("Enter Name");
-            await initAudio();
-
+            
             try {
                 const hash = window.location.hash.substring(1);
-                const [hId, encKey, pass] = atob(hash).split("::");
+                const decoded = atob(hash);
+                const [hId, encKey, pass] = decoded.split("::");
                 hostId = hId;
-                sessionKey = CryptoJS.AES.decrypt(encKey, pass).toString(CryptoJS.enc.Utf8);
+                const bytes = CryptoJS.AES.decrypt(encKey, pass);
+                sessionKey = bytes.toString(CryptoJS.enc.Utf8);
                 if(!sessionKey) throw new Error();
 
                 document.getElementById('screen-setup').classList.add('hidden');
@@ -197,10 +240,11 @@
                 peer.on('open', (id) => {
                     myId = id;
                     hostConn = peer.connect(hostId);
-                    hostConn.on('open', () => hostConn.send({type: 'JOIN', name: myName, id: myId}));
-                    hostConn.on('data', handleClientData);
+                    hostConn.on('open', () => {
+                        hostConn.send({type: 'JOIN', name: myName, id: myId});
+                    });
+                    hostConn.on('data', handleData);
                 });
-                peer.on('call', call => { call.answer(localStream); call.on('stream', playAudio); });
             } catch(e) { alert("Invalid Link"); }
         }
 
@@ -211,24 +255,34 @@
             document.getElementById('share-link').innerText = `${location.origin}${location.pathname}#${payload}`;
         }
 
+        // --- 2. HOST LOGIC ---
+
         function handleHostData(data, conn) {
             if(data.type === 'JOIN') {
                 if(!players.find(p => p.id === data.id)) {
                     players.push({id: data.id, name: data.name, score: 0});
                     connections[data.id] = conn;
-                    if(localStream) peer.call(data.id, localStream);
                     broadcast({type: 'LOBBY_UPDATE', players: players});
                 }
-            } else { processGameLogic(data, data.id || conn.peer); }
+            } else {
+                processGameLogic(data, data.id || conn.peer);
+            }
         }
 
         function broadcast(msg) {
-            handleClientData(msg);
-            Object.values(connections).forEach(c => c.send(msg));
+            handleData(msg); // Update Host UI
+            Object.values(connections).forEach(c => c.send(msg)); // Update Clients
         }
 
-        function handleClientData(data) {
-            if(data.type === 'LOBBY_UPDATE') { players = data.players; renderLobby(); }
+        // --- 3. COMMON DATA HANDLER (Syncs UI) ---
+
+        function handleData(data) {
+            console.log("Received:", data.type); // Debug
+
+            if(data.type === 'LOBBY_UPDATE') {
+                players = data.players;
+                renderLobby();
+            }
             if(data.type === 'START_GAME') {
                 document.getElementById('screen-lobby').classList.add('hidden');
                 document.getElementById('screen-game').classList.remove('hidden');
@@ -237,29 +291,48 @@
                 renderHand();
             }
             if(data.type === 'NEW_ROUND') {
-                document.getElementById('screen-voting').classList.add('hidden');
+                // Ensure Voting is HIDDEN
+                const v = document.getElementById('screen-voting');
+                v.classList.add('hidden');
+                v.style.display = 'none'; // Force hide
+                
                 document.getElementById('r-curr').innerText = data.round;
                 document.getElementById('black-card').innerText = data.blackCard;
+                document.getElementById('status-msg').innerText = `Pick ${data.pick}`;
                 pickReq = data.pick;
                 selected = [];
                 document.getElementById('fab-submit').classList.add('hidden');
                 renderHand();
             }
-            if(data.type === 'VOTING_START') showVoting(data.subs);
+            if(data.type === 'VOTING_START') {
+                showVoting(data.subs);
+            }
             if(data.type === 'ROUND_RES') {
-                document.getElementById('screen-voting').classList.add('hidden');
+                const v = document.getElementById('screen-voting');
+                v.classList.add('hidden');
+                v.style.display = 'none';
+                
                 alert(`Winner: ${data.winner}\n"${data.text}"`);
                 players = data.scores;
                 const me = players.find(p => p.id === myId);
                 if(me) document.getElementById('my-score').innerText = me.score;
             }
-            if(data.type === 'ADD_CARDS') { hand.push(...data.cards); renderHand(); }
-            if(data.type === 'GAME_OVER') { alert("Game Over! Winner: " + data.winner.name); location.reload(); }
+            if(data.type === 'ADD_CARDS') { 
+                hand.push(...data.cards); 
+                renderHand(); 
+            }
+            if(data.type === 'GAME_OVER') { 
+                alert("Game Over! Winner: " + data.winner.name); 
+                location.reload(); 
+            }
         }
 
         function renderLobby() {
             document.getElementById('player-count').innerText = players.length;
-            document.getElementById('player-list').innerHTML = players.map(p => `<span class="player-badge">${p.name}</span>`).join('');
+            document.getElementById('player-list').innerHTML = players.map(p => 
+                `<span class="player-badge">${p.name}</span>`
+            ).join('');
+            
             if(isHost) {
                 const btn = document.getElementById('btn-start');
                 btn.disabled = players.length < 2;
@@ -268,31 +341,37 @@
             }
         }
 
+        // --- 4. GAMEPLAY ---
+
         function startGame() {
             const rounds = document.getElementById('rounds-input').value;
             broadcast({type: 'TOAST', msg: 'Generating...'});
+            
             generateDeck(players.length, rounds).then(deck => {
                 window.serverDeck = deck;
                 players.forEach(p => {
                     const h = deck.whiteCards.splice(0, 10);
                     const msg = {type: 'START_GAME', hand: h, rounds: rounds};
-                    if(p.id === myId) handleClientData(msg); else connections[p.id].send(msg);
+                    if(p.id === myId) handleData(msg);
+                    else connections[p.id].send(msg);
                 });
                 startRound(1);
             }).catch(e => {
                 console.error(e);
-                alert("API Error: " + e.message);
+                alert("API Error. Check Key.");
             });
         }
 
         function startRound(n) {
             window.currRound = n;
             window.submissions = [];
+            
             if(n > window.serverDeck.blackCards.length) {
                 let w = players.reduce((a,b)=>a.score>b.score?a:b);
                 broadcast({type:'GAME_OVER', winner:w});
                 return;
             }
+            
             const card = window.serverDeck.blackCards[n-1];
             const pick = (card.match(/____/g)||[]).length === 2 ? 2 : 1;
             broadcast({type:'NEW_ROUND', round:n, blackCard:card, pick:pick});
@@ -301,23 +380,36 @@
         function processGameLogic(data, pid) {
             if(data.type === 'SUBMIT') {
                 window.submissions.push({pid: pid, text: data.text, score:0});
-                if(window.submissions.length === players.length) broadcast({type:'VOTING_START', subs: window.submissions});
+                if(window.submissions.length === players.length) {
+                    broadcast({type:'VOTING_START', subs: window.submissions});
+                }
             }
             if(data.type === 'VOTE') {
-                data.votes.forEach((vIdx, r) => window.submissions[vIdx].score += (1 - (r/window.submissions.length)));
+                const z = window.submissions.length;
+                data.votes.forEach((vIdx, r) => {
+                    window.submissions[vIdx].score += (1 - (r/z));
+                });
+                
                 if(!window.voteCount) window.voteCount=0;
                 window.voteCount++;
+                
                 if(window.voteCount === players.length) {
                     let wSub = window.submissions.reduce((a,b)=>a.score>b.score?a:b);
                     let wPlayer = players.find(p=>p.id===wSub.pid);
                     wPlayer.score++;
                     window.voteCount = 0;
+                    
+                    // Deal cards
                     players.forEach(p => {
                         const newC = window.serverDeck.whiteCards.splice(0, window.pickReqCache || 1);
                         const msg = {type:'ADD_CARDS', cards: newC};
-                        if(p.id===myId) handleClientData(msg); else connections[p.id].send(msg);
+                        if(p.id===myId) handleData(msg);
+                        else connections[p.id].send(msg);
                     });
+                    
                     broadcast({type:'ROUND_RES', winner:wPlayer.name, text:wSub.text, scores:players});
+                    
+                    // Fixed Timer for Next Round
                     setTimeout(() => startRound(window.currRound+1), 4000);
                 }
             }
@@ -340,7 +432,8 @@
             else if(selected.length < pickReq) selected.push(i);
             renderHand();
             const fab = document.getElementById('fab-submit');
-            if(selected.length === pickReq) fab.classList.remove('hidden'); else fab.classList.add('hidden');
+            if(selected.length === pickReq) fab.classList.remove('hidden');
+            else fab.classList.add('hidden');
         }
 
         function submitCard() {
@@ -348,16 +441,26 @@
             hand = hand.filter((_,i)=>!selected.includes(i));
             renderHand();
             document.getElementById('fab-submit').classList.add('hidden');
+            document.getElementById('status-msg').innerText = "Waiting for others...";
+            
             const msg = {type:'SUBMIT', text:txt};
-            if(isHost) processGameLogic(msg, myId); else hostConn.send(msg);
+            if(isHost) processGameLogic(msg, myId);
+            else hostConn.send(msg);
         }
 
         function showVoting(subs) {
-            document.getElementById('screen-voting').classList.remove('hidden');
+            // Force Show Modal
+            const modal = document.getElementById('screen-voting');
+            modal.classList.remove('hidden');
+            modal.style.display = 'flex'; // Ensure flex layout
+            
             const div = document.getElementById('voting-grid');
             div.innerHTML = '';
             window.voteRank = [];
+            
+            // Randomize
             window.voteRef = [...subs].sort(()=>Math.random()-0.5);
+            
             window.voteRef.forEach((s, idx) => {
                 const c = document.createElement('div');
                 c.className = 'card';
@@ -365,51 +468,50 @@
                 c.onclick = function() {
                     if(window.voteRank.includes(idx)) {
                         window.voteRank = window.voteRank.filter(x=>x!==idx);
-                        this.style.border = 'none'; this.innerText = s.text;
+                        this.style.border = 'none';
+                        this.innerText = s.text;
                     } else {
                         window.voteRank.push(idx);
                         this.style.border = '4px solid #03dac6';
                         this.innerHTML = `${s.text} <br><b>#${window.voteRank.length}</b>`;
                     }
+                    // Enable confirm button if at least one selected
+                    document.getElementById('btn-vote').disabled = (window.voteRank.length === 0);
                 };
                 div.appendChild(c);
             });
         }
 
         function confirmVote() {
-            document.getElementById('screen-voting').classList.add('hidden');
+            document.getElementById('screen-voting').style.display = 'none'; // Hide locally
             const msg = {type:'VOTE', votes: window.voteRank};
-            if(isHost) processGameLogic(msg, myId); else hostConn.send(msg);
+            if(isHost) processGameLogic(msg, myId);
+            else hostConn.send(msg);
         }
 
-        async function initAudio() {
-            try {
-                localStream = await navigator.mediaDevices.getUserMedia({audio: true});
-            } catch(e) { document.getElementById('fab-mute').style.display = 'none'; }
+        function copyLink() {
+            navigator.clipboard.writeText(document.getElementById('share-link').innerText);
+            alert("Copied!");
         }
-        function playAudio(stream) {
-            const a = document.createElement('audio');
-            a.srcObject = stream; a.autoplay = true; a.playsInline = true;
-            document.body.appendChild(a);
-        }
-        function toggleMute() {
-            if(!localStream) return;
-            const t = localStream.getAudioTracks()[0];
-            t.enabled = !t.enabled; isMuted = !t.enabled;
-            const btn = document.getElementById('fab-mute');
-            btn.classList.toggle('muted', isMuted);
-            btn.innerHTML = isMuted ? '<i class="fas fa-microphone-slash"></i>' : '<i class="fas fa-microphone"></i>';
-        }
-        function copyLink() { navigator.clipboard.writeText(document.getElementById('share-link').innerText); alert("Copied!"); }
 
-        // --- FIXED API CALL ---
+        // --- UPDATED AI PROMPT (SPICY & INDIAN) ---
         async function generateDeck(x, y) {
-            const prompt = `Generate ONLY valid JSON for Cards Against Humanity (Indian Context). Do not include any text before or after the JSON. Format: {"blackCards": ["prompt 1", "prompt 2"], "whiteCards": ["answer 1", "answer 2"]}. Generate ${y} black cards with blanks (____), ${Math.floor(6*x*y/5)+10*x} white cards. ONLY output the JSON, nothing else.`;
+            const prompt = `
+            Generate a valid JSON object for "Cards Against Humanity" tailored for an Indian Audience.
+            Theme: Adult, Dark Humor, Satirical, Gen Z, Bollywood Cringe, Indian Politics, Desi Parents, Corporate Slavery.
+            Tone: Mocking, Spicy, Offensive (but clever), Hinglish allowed.
+            Structure: {"blackCards": ["Prompt..."], "whiteCards": ["Answer..."]}
+            Quantity: ${y} black cards (include ${Math.floor(y/5)} 'pick 2' cards with 2 blanks '____'), ${Math.floor(6*x*y/5)+10*x} white cards.
+            Examples: "Sharmaji ka beta", "Bangalore traffic", "Modiji's mic", "Dating apps in India".
+            Output ONLY valid JSON.
+            `;
+            
             const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key=${sessionKey}`, {
                 method: 'POST',
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
                     contents: [{ parts: [{ text: prompt }] }],
+                    generationConfig: { responseMimeType: "application/json" },
                     safetySettings: [
                         { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
                         { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
@@ -420,17 +522,9 @@
             });
             const d = await resp.json();
             if (d.error) throw new Error(d.error.message);
-            if (!d.candidates || d.candidates.length === 0) throw new Error("Safety Block or Empty Response");
+            if (!d.candidates || d.candidates.length === 0) throw new Error("Safety Block");
             
-            let text = d.candidates[0].content.parts[0].text;
-            // Remove markdown code blocks
-            text = text.replace(/```json\s*/g, '').replace(/```\s*/g, '');
-            // Try to extract JSON if there's extra text
-            const jsonMatch = text.match(/\{[\s\S]*\}/);
-            if (jsonMatch) {
-                text = jsonMatch[0];
-            }
-            return JSON.parse(text.trim());
+            return JSON.parse(d.candidates[0].content.parts[0].text);
         }
     </script>
 </body>
