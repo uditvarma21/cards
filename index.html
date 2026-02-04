@@ -10,136 +10,72 @@
     
     <style>
         :root {
-            --bg-color: #121212;
-            --card-black: #1e1e1e;
-            --card-white: #ffffff;
-            --accent: #bb86fc;
-            --success: #03dac6;
-            --error: #cf6679;
-            --text-main: #e0e0e0;
+            --bg: #121212; --panel: #1e1e1e;
+            --accent: #bb86fc; --success: #03dac6; --error: #cf6679;
+            --text: #e0e0e0;
         }
 
         body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background: var(--bg-color); 
-            color: var(--text-main); 
-            margin: 0; 
-            padding: 15px; 
-            padding-bottom: 80px; 
+            font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); 
+            margin: 0; padding: 20px; padding-bottom: 80px; 
         }
-
         .hidden { display: none !important; }
 
-        /* --- UI COMPONENTS --- */
+        /* UI Elements */
         .btn { 
-            padding: 15px 24px; 
-            cursor: pointer; 
-            background: var(--accent); 
-            border: none; 
-            font-weight: bold; 
-            border-radius: 25px; 
-            color: #000; 
-            font-size: 1rem;
-            width: 100%;
-            margin: 10px 0;
-            transition: transform 0.1s;
+            padding: 15px; width: 100%; border-radius: 30px; border: none; 
+            background: var(--accent); color: #000; font-weight: bold; font-size: 1rem; 
+            margin: 10px 0; cursor: pointer; transition: 0.2s;
         }
-        .btn:active { transform: scale(0.95); }
-        .btn.secondary { background: #333; color: white; border: 1px solid #555; }
-        
+        .btn:active { transform: scale(0.98); }
+        .btn:disabled { background: #555; color: #888; cursor: not-allowed; }
+
         input { 
-            padding: 15px; 
-            border-radius: 8px; 
-            border: 1px solid #333; 
-            background: #252525; 
-            color: #fff; 
-            width: 100%; 
-            box-sizing: border-box;
-            font-size: 1rem;
-            text-align: center;
-            margin-bottom: 10px;
+            padding: 15px; width: 100%; border-radius: 8px; border: 1px solid #444; 
+            background: #252525; color: #fff; box-sizing: border-box; text-align: center; font-size: 1rem; margin-bottom: 10px;
         }
 
         .panel { 
-            background: #1e1e1e; 
-            padding: 20px; 
-            border-radius: 12px; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-            max-width: 500px;
-            margin: 0 auto;
-            text-align: center;
+            background: var(--panel); padding: 25px; border-radius: 15px; 
+            max-width: 500px; margin: 0 auto; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.5);
         }
 
-        /* --- CARDS GRID --- */
-        .card-container { 
-            display: grid; 
-            grid-template-columns: repeat(2, 1fr); 
-            gap: 10px; 
-            margin-top: 15px; 
+        /* Lobby Items */
+        .player-badge {
+            background: #333; padding: 8px 15px; border-radius: 20px; 
+            margin: 5px; display: inline-block; font-size: 0.9rem; border: 1px solid #444;
         }
-        @media (min-width: 768px) { .card-container { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 20px; } }
+
+        /* Cards Grid */
+        .card-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 20px; }
+        @media (min-width: 768px) { .card-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); } }
 
         .card { 
-            aspect-ratio: 2/3;
-            padding: 10px; 
-            border-radius: 8px; 
-            font-size: 0.85rem; 
-            font-weight: 600; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center;
-            text-align: center;
-            cursor: pointer; 
-            user-select: none;
-            position: relative;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-            word-wrap: break-word;
+            background: #fff; color: #000; aspect-ratio: 2/3; padding: 10px; 
+            border-radius: 8px; display: flex; align-items: center; justify-content: center; 
+            text-align: center; font-size: 0.85rem; font-weight: bold; cursor: pointer; user-select: none;
         }
+        .card.black { background: #000; color: #fff; border: 2px solid #333; grid-column: 1 / -1; min-height: 120px; font-size: 1.1rem; }
+        .card.selected { border: 4px solid var(--accent); background: #f0f0f0; transform: scale(0.98); }
 
-        .card.black { 
-            background: var(--card-black); 
-            color: white; 
-            border: 2px solid #333; 
-            min-height: 150px; 
-            font-size: 1.1rem; 
-            width: 100%; 
-            grid-column: 1 / -1; 
-        }
-        
-        .card.white { background: var(--card-white); color: black; border: 2px solid #fff; }
-        .card.white.selected { border: 4px solid var(--accent); background: #f0f0f0; transform: scale(0.98); }
-
-        /* --- FLOATING CONTROLS --- */
-        #fab-submit {
-            position: fixed; bottom: 20px; right: 20px;
-            width: 60px; height: 60px; border-radius: 50%;
-            background: var(--success); color: #000;
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.5);
-            z-index: 90; font-size: 1.5rem; border: none;
-        }
-
+        /* Floating Buttons */
         #fab-mute {
-            position: fixed; top: 15px; right: 15px;
-            width: 45px; height: 45px; border-radius: 50%;
-            background: #333; color: #fff;
-            display: flex; align-items: center; justify-content: center;
-            z-index: 100; border: 1px solid #555; cursor: pointer;
+            position: fixed; top: 15px; right: 15px; width: 45px; height: 45px; 
+            border-radius: 50%; background: #333; color: #fff; border: 1px solid #555;
+            display: flex; align-items: center; justify-content: center; z-index: 100;
         }
-        #fab-mute.muted { background: var(--error); }
+        #fab-mute.muted { background: var(--error); border-color: var(--error); }
 
-        #voting-modal { 
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(0,0,0,0.95); z-index: 110; padding: 20px; 
-            box-sizing: border-box; overflow-y: auto; 
-            display: flex; flex-direction: column; align-items: center; 
+        #fab-submit {
+            position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; 
+            border-radius: 50%; background: var(--success); border: none; z-index: 90;
+            display: flex; align-items: center; justify-content: center; font-size: 1.5rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
         }
 
         .link-box {
-            background: #000; color: lime; padding: 10px;
-            font-family: monospace; font-size: 0.8rem;
-            word-break: break-all; border-radius: 5px; margin: 10px 0;
-            cursor: pointer; border: 1px dashed #444;
+            background: #000; color: lime; padding: 10px; font-family: monospace; 
+            font-size: 0.75rem; word-break: break-all; border-radius: 5px; cursor: pointer; border: 1px dashed #444;
         }
     </style>
 </head>
@@ -147,527 +83,437 @@
 
     <button id="fab-mute" onclick="toggleMute()"><i class="fas fa-microphone"></i></button>
 
-    <div id="setup-ui">
+    <div id="screen-setup">
         <h1 style="text-align: center; color: var(--accent);">Cards Against<br>Sanskaar</h1>
         
-        <div id="host-panel" class="panel">
-            <h3><i class="fas fa-crown"></i> Host a Game</h3>
-            <p style="font-size:0.9rem; color:#aaa;">Securely paste your Gemini API key. It is encrypted in the link and never stored.</p>
+        <div id="host-form" class="panel">
+            <h3><i class="fas fa-crown"></i> Create Room</h3>
             <input type="password" id="api-key" placeholder="Paste Gemini API Key">
             <input type="text" id="host-name" placeholder="Your Name">
-            <button class="btn" onclick="createSession()">Create Secure Room</button>
-            
-            <div id="invite-area" class="hidden">
-                <p>Send this link to friends:</p>
-                <div id="share-link" class="link-box" onclick="copyLink()">Generating...</div>
-                <p id="waiting-msg" style="color: var(--accent);">Waiting for players...</p>
-            </div>
+            <button class="btn" onclick="startHostFlow()">Create Secure Lobby</button>
         </div>
 
-        <div id="join-panel" class="panel hidden">
-            <h3><i class="fas fa-user-plus"></i> Join Game</h3>
-            <p id="vault-status" style="color: lime; font-size: 0.8rem;">Session Key Decrypted ✅</p>
+        <div id="join-form" class="panel hidden">
+            <h3><i class="fas fa-user-plus"></i> Join Room</h3>
+            <p style="color: lime; font-size: 0.8rem;">Session Key Decrypted ✅</p>
             <input type="text" id="join-name" placeholder="Your Name">
-            <button class="btn" onclick="joinSession()">Enter Lobby</button>
+            <button class="btn" onclick="startJoinFlow()">Join Lobby</button>
         </div>
     </div>
 
-    <div id="lobby-ui" class="hidden">
+    <div id="screen-lobby" class="hidden">
         <div class="panel">
             <h2>Lobby</h2>
-            <div id="player-count" style="font-size: 2rem; color: var(--success);">1</div>
-            <p>Players Joined</p>
-            <div id="player-list" style="margin: 15px 0; color: #888;"></div>
+            <div id="player-count" style="font-size: 2.5rem; font-weight: bold; color: var(--success);">1</div>
+            <p>Players Online</p>
             
+            <div id="player-list" style="margin: 20px 0; min-height: 50px;"></div>
+
             <div id="host-controls" class="hidden">
-                <label>Rounds: <input type="number" id="rounds-input" value="5" style="width: 60px; display:inline-block;"></label>
-                <button class="btn" onclick="startGame()">START GAME</button>
+                <div class="link-box" id="share-link" onclick="copyLink()">Generating Link...</div>
+                <p style="font-size:0.8rem; color:#888;">Tap link to copy & send to friends</p>
+                <div style="margin-top: 20px;">
+                    <label>Rounds: <input type="number" id="rounds-input" value="5" style="width: 60px; display:inline-block;"></label>
+                    <button id="btn-start" class="btn" onclick="startGame()" disabled>Wait for Players</button>
+                </div>
             </div>
-            <p id="client-wait-msg" class="hidden">Waiting for Host to start...</p>
+
+            <p id="client-wait" class="hidden">Waiting for Host to start...</p>
         </div>
     </div>
 
-    <div id="game-ui" class="hidden">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <div style="background:#333; padding:5px 15px; border-radius:20px;">
-                <i class="fas fa-layer-group"></i> <span id="current-round">1</span>/<span id="total-rounds">5</span>
-            </div>
-            <div style="background:#333; padding:5px 15px; border-radius:20px; color: var(--accent);">
-                <i class="fas fa-star"></i> <span id="my-score">0</span>
-            </div>
+    <div id="screen-game" class="hidden">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+            <span>Round <span id="r-curr">1</span>/<span id="r-total">5</span></span>
+            <span style="color: var(--accent);">Score: <span id="my-score">0</span></span>
         </div>
-
         <div id="black-card" class="card black">Loading...</div>
-        <div style="text-align:center; margin: 10px 0; color: #888; font-size: 0.9rem;">
-            <span id="pick-req">Pick 1</span>
-        </div>
-        <div id="my-hand" class="card-container"></div>
+        <div id="my-hand" class="card-grid"></div>
         <button id="fab-submit" class="hidden" onclick="submitCard()"><i class="fas fa-check"></i></button>
     </div>
 
-    <div id="voting-modal" class="hidden">
-        <h2 style="color: white; text-align: center;">Vote for the best!</h2>
-        <div id="voting-container" class="card-container" style="justify-content: center; width: 100%;"></div>
-        <button class="btn" style="margin-top: 20px; background: var(--success);" onclick="submitVote()">CONFIRM VOTE</button>
+    <div id="screen-voting" class="hidden panel" style="width: 90%; position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); z-index:110; height:80vh; overflow-y:auto;">
+        <h2>Vote!</h2>
+        <div id="voting-grid" class="card-grid"></div>
+        <button class="btn" onclick="confirmVote()">Confirm Vote</button>
     </div>
 
     <script>
-        // --- GLOBAL STATE ---
-        let peer;
-        let myId;
-        let myName;
-        let hostId; // The ID of the Host Peer
+        // --- STATE ---
+        let peer, myId, myName, hostId;
         let isHost = false;
-        let sessionKey = ""; // Decrypted API Key
+        let sessionKey = "";
         let players = []; // {id, name, score}
-        let connections = {}; // For Host: id -> conn
-        let hostConn; // For Client: conn to Host
+        let connections = {}; // Host: id -> conn
+        let hostConn; // Client: conn to host
         
         let localStream;
         let isMuted = false;
+        
+        // Game vars
+        let hand = [], selected = [], pickReq = 1;
 
-        // Game State
-        let hand = [];
-        let selectedCards = [];
-        let currentPickReq = 1;
-
-        // --- 1. VAULT LOGIC (Encryption/Decryption) ---
+        // --- 1. SETUP FLOW ---
 
         window.onload = () => {
             if(window.location.hash.length > 5) {
-                // We are a Joiner
-                document.getElementById('host-panel').classList.add('hidden');
-                document.getElementById('join-panel').classList.remove('hidden');
+                document.getElementById('host-form').classList.add('hidden');
+                document.getElementById('join-form').classList.remove('hidden');
             }
         };
 
-        function createSession() {
+        async function startHostFlow() {
             const key = document.getElementById('api-key').value.trim();
             myName = document.getElementById('host-name').value.trim();
-            if(!key || !myName) return alert("Please fill all fields");
+            if(!key || !myName) return alert("Fill all fields");
+            
+            // Audio Trigger (Must be in click event)
+            await initAudio();
 
-            isHost = true;
             sessionKey = key;
+            isHost = true;
+            
+            // UI Transition
+            document.getElementById('screen-setup').classList.add('hidden');
+            document.getElementById('screen-lobby').classList.remove('hidden');
             document.getElementById('host-controls').classList.remove('hidden');
-            document.getElementById('api-key').value = ""; // Clear UI
             
-            // Init PeerJS as Host
-            initPeer(null); 
+            // Init Peer
+            peer = new Peer();
+            peer.on('open', (id) => {
+                myId = id;
+                generateLink(id);
+                // Add self to list
+                players = [{id: myId, name: myName, score: 0}];
+                renderLobby();
+            });
+            
+            // Host Logic
+            peer.on('connection', (conn) => {
+                conn.on('open', () => {
+                    conn.on('data', (data) => handleHostData(data, conn));
+                });
+            });
+            
+            // Host Audio
+            peer.on('call', call => {
+                call.answer(localStream);
+                call.on('stream', playAudio);
+            });
         }
 
-        function generateVaultLink(myPeerId) {
-            // 1. Generate random pass
-            const pass = Math.random().toString(36).substring(2, 10);
-            // 2. Encrypt API Key
-            const encrypted = CryptoJS.AES.encrypt(sessionKey, pass).toString();
-            // 3. Create Payload: [HostID]::[EncryptedKey]::[Pass]
-            const payload = btoa(`${myPeerId}::${encrypted}::${pass}`);
-            
-            const url = `${window.location.origin}${window.location.pathname}#${payload}`;
-            
-            document.getElementById('share-link').innerText = url;
-            document.getElementById('invite-area').classList.remove('hidden');
-            
-            // Add self to player list
-            players.push({id: myPeerId, name: myName, score: 0});
-            updateLobby();
-        }
-
-        function joinSession() {
+        async function startJoinFlow() {
             myName = document.getElementById('join-name').value.trim();
             if(!myName) return alert("Enter Name");
+            
+            await initAudio();
 
             try {
                 const hash = window.location.hash.substring(1);
                 const decoded = atob(hash);
-                const parts = decoded.split("::");
+                const [hId, encKey, pass] = decoded.split("::");
+                hostId = hId;
                 
-                hostId = parts[0]; // The Host's Peer ID
-                const encrypted = parts[1];
-                const pass = parts[2];
-
-                // Decrypt Key
-                const bytes = CryptoJS.AES.decrypt(encrypted, pass);
+                // Decrypt
+                const bytes = CryptoJS.AES.decrypt(encKey, pass);
                 sessionKey = bytes.toString(CryptoJS.enc.Utf8);
-                
-                if(!sessionKey) throw new Error("Decryption failed");
+                if(!sessionKey) throw new Error();
 
-                document.getElementById('client-wait-msg').classList.remove('hidden');
-                initPeer(hostId); // Init as Client connecting to Host
+                // UI Transition
+                document.getElementById('screen-setup').classList.add('hidden');
+                document.getElementById('screen-lobby').classList.remove('hidden');
+                document.getElementById('client-wait').classList.remove('hidden');
 
-            } catch(e) {
-                alert("Invalid Link. Please ask host for a new one.");
-            }
-        }
-
-        function copyLink() {
-            const txt = document.getElementById('share-link').innerText;
-            navigator.clipboard.writeText(txt);
-            alert("Link Copied!");
-        }
-
-        // --- 2. NETWORKING (Hub & Spoke) ---
-
-        function initPeer(targetHostId) {
-            peer = new Peer(); // Auto-generate ID
-
-            peer.on('open', (id) => {
-                myId = id;
-                console.log("My ID:", myId);
-
-                if(isHost) {
-                    generateVaultLink(id);
-                } else {
-                    // Client: Connect to Host
-                    connectToHost(targetHostId);
-                }
-                
-                // Initialize Audio immediately
-                initAudio(); 
-            });
-
-            // Host receives connections
-            peer.on('connection', (conn) => {
-                if(isHost) {
-                    handleHostConnection(conn);
-                }
-            });
-
-            // Handle Incoming Calls (Audio)
-            peer.on('call', (call) => {
-                call.answer(localStream);
-                call.on('stream', stream => playAudio(stream));
-            });
-        }
-
-        function connectToHost(id) {
-            hostConn = peer.connect(id);
-            hostConn.on('open', () => {
-                console.log("Connected to Host");
-                hostConn.send({type: 'JOIN', name: myName, id: myId});
-                
-                // Transition UI
-                document.getElementById('setup-ui').classList.add('hidden');
-                document.getElementById('lobby-ui').classList.remove('hidden');
-            });
-
-            hostConn.on('data', (data) => handleClientData(data));
-        }
-
-        function handleHostConnection(conn) {
-            conn.on('open', () => {
-                conn.on('data', (data) => {
-                    if(data.type === 'JOIN') {
-                        // New player joined
-                        const newP = {id: data.id, name: data.name, score: 0};
-                        if(!players.find(p => p.id === newP.id)) {
-                            players.push(newP);
-                            connections[data.id] = conn;
-                            
-                            // 1. Broadcast update list to EVERYONE
-                            broadcast({type: 'LOBBY_UPDATE', players: players});
-                            
-                            // 2. Call the new player for Audio
-                            callPeer(data.id);
-                        }
-                    } else {
-                        // Forward game actions to logic
-                        handleGameLogic(data, data.id || conn.peer);
-                    }
+                // Connect
+                peer = new Peer();
+                peer.on('open', (id) => {
+                    myId = id;
+                    hostConn = peer.connect(hostId);
+                    hostConn.on('open', () => {
+                        hostConn.send({type: 'JOIN', name: myName, id: myId});
+                    });
+                    hostConn.on('data', handleClientData);
                 });
-            });
+
+                peer.on('call', call => {
+                    call.answer(localStream);
+                    call.on('stream', playAudio);
+                });
+
+            } catch(e) { alert("Invalid Link"); }
+        }
+
+        function generateLink(id) {
+            const pass = Math.random().toString(36).slice(2);
+            const enc = CryptoJS.AES.encrypt(sessionKey, pass).toString();
+            const payload = btoa(`${id}::${enc}::${pass}`);
+            document.getElementById('share-link').innerText = `${location.origin}${location.pathname}#${payload}`;
+        }
+
+        // --- 2. HOST LOGIC ---
+
+        function handleHostData(data, conn) {
+            if(data.type === 'JOIN') {
+                if(!players.find(p => p.id === data.id)) {
+                    players.push({id: data.id, name: data.name, score: 0});
+                    connections[data.id] = conn;
+                    
+                    // Call new player for audio
+                    if(localStream) peer.call(data.id, localStream);
+                    
+                    // Sync everyone
+                    broadcast({type: 'LOBBY_UPDATE', players: players});
+                }
+            } else {
+                // Forward Game Logic
+                processGameLogic(data, data.id || conn.peer);
+            }
         }
 
         function broadcast(msg) {
-            // Send to all clients
+            // Update Self
+            handleClientData(msg);
+            // Send to Others
             Object.values(connections).forEach(c => c.send(msg));
-            // Update Host UI
-            handleClientData(msg); 
         }
 
-        // --- 3. GAME LOGIC ---
-
-        function startGame() {
-            if(players.length < 2) return alert("Need at least 2 players!");
-            const rounds = document.getElementById('rounds-input').value;
-            launchGame(rounds);
-        }
-
-        async function launchGame(rounds) {
-            broadcast({type: 'TOAST', msg: 'Generating Deck...'});
-            try {
-                // Host calls API using local decrypted key
-                const deck = await generateDeck(sessionKey, players.length, rounds);
-                window.serverDeck = deck;
-                
-                // Deal cards
-                players.forEach(p => {
-                    const hand = deck.whiteCards.splice(0, 10);
-                    const payload = {type: 'START_GAME', hand: hand, rounds: rounds};
-                    
-                    if(p.id === myId) handleClientData(payload);
-                    else if(connections[p.id]) connections[p.id].send(payload);
-                });
-                
-                startRound(1);
-            } catch(e) {
-                alert("API Error: " + e.message);
-            }
-        }
-
-        function startRound(num) {
-            window.currentRoundNum = num;
-            window.submissions = [];
-            
-            if(num > window.serverDeck.blackCards.length) {
-                // Game Over
-                let winner = players.reduce((a,b) => a.score > b.score ? a : b);
-                broadcast({type: 'GAME_OVER', winner: winner});
-                return;
-            }
-
-            const card = window.serverDeck.blackCards[num - 1];
-            const pick = (card.match(/____/g) || []).length === 2 ? 2 : 1;
-            
-            broadcast({
-                type: 'NEW_ROUND',
-                round: num,
-                blackCard: card,
-                pick: pick
-            });
-        }
-
-        function handleGameLogic(data, pid) {
-            if(data.type === 'SUBMIT') {
-                window.submissions.push({pid: pid, text: data.text, score: 0});
-                if(window.submissions.length === players.length) {
-                    broadcast({type: 'VOTING_START', subs: window.submissions});
-                }
-            }
-            if(data.type === 'VOTE') {
-                const z = window.submissions.length;
-                data.votes.forEach((voteIdx, rank) => {
-                    const pts = 1 - (rank / z);
-                    window.submissions[voteIdx].score += pts;
-                });
-                
-                if(!window.voteCount) window.voteCount = 0;
-                window.voteCount++;
-                
-                if(window.voteCount === players.length) {
-                    // Tally
-                    let winnerSub = window.submissions.reduce((a,b) => a.score > b.score ? a : b);
-                    let winnerPlayer = players.find(p => p.id === winnerSub.pid);
-                    winnerPlayer.score++;
-                    
-                    window.voteCount = 0;
-                    
-                    // Deal new cards
-                    players.forEach(p => {
-                        const newCards = window.serverDeck.whiteCards.splice(0, window.pickReqCache);
-                        const msg = {type: 'ADD_CARDS', cards: newCards};
-                        if(p.id === myId) handleClientData(msg);
-                        else if(connections[p.id]) connections[p.id].send(msg);
-                    });
-
-                    broadcast({
-                        type: 'ROUND_RES',
-                        winnerName: winnerPlayer.name,
-                        winningText: winnerSub.text,
-                        scores: players
-                    });
-                    
-                    setTimeout(() => startRound(window.currentRoundNum + 1), 5000);
-                }
-            }
-        }
-
-        // --- 4. CLIENT UI HANDLING ---
+        // --- 3. CLIENT LOGIC ---
 
         function handleClientData(data) {
             if(data.type === 'LOBBY_UPDATE') {
                 players = data.players;
-                updateLobby();
+                renderLobby();
             }
             if(data.type === 'START_GAME') {
-                document.getElementById('setup-ui').classList.add('hidden');
-                document.getElementById('lobby-ui').classList.add('hidden');
-                document.getElementById('game-ui').classList.remove('hidden');
-                
+                document.getElementById('screen-lobby').classList.add('hidden');
+                document.getElementById('screen-game').classList.remove('hidden');
                 hand = data.hand;
-                document.getElementById('total-rounds').innerText = data.rounds;
+                document.getElementById('r-total').innerText = data.rounds;
                 renderHand();
             }
             if(data.type === 'NEW_ROUND') {
-                document.getElementById('voting-modal').classList.add('hidden');
-                document.getElementById('current-round').innerText = data.round;
+                document.getElementById('screen-voting').classList.add('hidden');
+                document.getElementById('r-curr').innerText = data.round;
                 document.getElementById('black-card').innerText = data.blackCard;
-                document.getElementById('pick-req').innerText = `Pick ${data.pick}`;
-                currentPickReq = data.pick;
-                window.pickReqCache = data.pick;
-                selectedCards = [];
+                pickReq = data.pick;
+                selected = [];
                 document.getElementById('fab-submit').classList.add('hidden');
                 renderHand();
             }
-            if(data.type === 'VOTING_START') {
-                showVoting(data.subs);
-            }
+            if(data.type === 'VOTING_START') showVoting(data.subs);
             if(data.type === 'ROUND_RES') {
-                document.getElementById('voting-modal').classList.add('hidden');
-                alert(`Winner: ${data.winnerName}\n"${data.winningText}"`);
-                const me = data.scores.find(p => p.id === myId);
-                if(me) document.getElementById('my-score').innerText = me.score;
+                document.getElementById('screen-voting').classList.add('hidden');
+                alert(`Winner: ${data.winner}\n"${data.text}"`);
+                updateScores(data.scores);
             }
-            if(data.type === 'ADD_CARDS') {
-                hand.push(...data.cards);
-                renderHand();
-            }
-            if(data.type === 'GAME_OVER') {
-                alert("GAME OVER! Winner: " + data.winner.name);
-                location.reload();
-            }
+            if(data.type === 'ADD_CARDS') { hand.push(...data.cards); renderHand(); }
+            if(data.type === 'GAME_OVER') { alert("Game Over! Winner: " + data.winner.name); location.reload(); }
         }
 
-        function updateLobby() {
+        function renderLobby() {
             document.getElementById('player-count').innerText = players.length;
             document.getElementById('player-list').innerHTML = players.map(p => 
-                `<span style="background:#333; padding:5px 10px; border-radius:15px; margin:2px; display:inline-block;">${p.name}</span>`
-            ).join(' ');
+                `<span class="player-badge">${p.name}</span>`
+            ).join('');
             
-            // If I am Host, update my own UI
+            // Enable Start Button if Host + >1 Player
             if(isHost) {
-                document.getElementById('setup-ui').classList.remove('hidden');
-                document.getElementById('lobby-ui').classList.add('hidden');
+                const btn = document.getElementById('btn-start');
+                if(players.length > 1) {
+                    btn.disabled = false;
+                    btn.innerText = "START GAME";
+                } else {
+                    btn.disabled = true;
+                    btn.innerText = "Wait for Players";
+                }
             }
         }
 
-        // --- 5. UI HELPERS ---
+        // --- 4. GAMEPLAY ---
+
+        function startGame() {
+            const rounds = document.getElementById('rounds-input').value;
+            broadcast({type: 'TOAST', msg: 'Generating...'});
+            
+            // Call API
+            generateDeck(players.length, rounds).then(deck => {
+                window.serverDeck = deck;
+                players.forEach(p => {
+                    const h = deck.whiteCards.splice(0, 10);
+                    const msg = {type: 'START_GAME', hand: h, rounds: rounds};
+                    if(p.id === myId) handleClientData(msg);
+                    else connections[p.id].send(msg);
+                });
+                startRound(1);
+            }).catch(e => alert("API Error: " + e));
+        }
+
+        function startRound(n) {
+            window.currRound = n;
+            window.submissions = [];
+            if(n > window.serverDeck.blackCards.length) {
+                let w = players.reduce((a,b)=>a.score>b.score?a:b);
+                broadcast({type:'GAME_OVER', winner:w});
+                return;
+            }
+            const card = window.serverDeck.blackCards[n-1];
+            const pick = (card.match(/____/g)||[]).length === 2 ? 2 : 1;
+            broadcast({type:'NEW_ROUND', round:n, blackCard:card, pick:pick});
+        }
+
+        function processGameLogic(data, pid) {
+            if(data.type === 'SUBMIT') {
+                window.submissions.push({pid: pid, text: data.text, score:0});
+                if(window.submissions.length === players.length) {
+                    broadcast({type:'VOTING_START', subs: window.submissions});
+                }
+            }
+            if(data.type === 'VOTE') {
+                const z = window.submissions.length;
+                data.votes.forEach((vIdx, r) => {
+                    window.submissions[vIdx].score += (1 - (r/z));
+                });
+                if(!window.voteCount) window.voteCount=0;
+                window.voteCount++;
+                if(window.voteCount === players.length) {
+                    let wSub = window.submissions.reduce((a,b)=>a.score>b.score?a:b);
+                    let wPlayer = players.find(p=>p.id===wSub.pid);
+                    wPlayer.score++;
+                    window.voteCount = 0;
+                    
+                    players.forEach(p => {
+                        const newC = window.serverDeck.whiteCards.splice(0, window.pickReqCache || 1);
+                        const msg = {type:'ADD_CARDS', cards: newC};
+                        if(p.id===myId) handleClientData(msg);
+                        else connections[p.id].send(msg);
+                    });
+                    
+                    broadcast({type:'ROUND_RES', winner:wPlayer.name, text:wSub.text, scores:players});
+                    setTimeout(() => startRound(window.currRound+1), 4000);
+                }
+            }
+        }
 
         function renderHand() {
-            const container = document.getElementById('my-hand');
-            container.innerHTML = '';
-            hand.forEach((text, i) => {
-                const div = document.createElement('div');
-                div.className = 'card white';
-                if(selectedCards.includes(i)) div.classList.add('selected');
-                div.innerText = text;
-                div.onclick = () => toggleCard(i);
-                container.appendChild(div);
+            const div = document.getElementById('my-hand');
+            div.innerHTML = '';
+            hand.forEach((t, i) => {
+                const c = document.createElement('div');
+                c.className = `card ${selected.includes(i)?'selected':''}`;
+                c.innerText = t;
+                c.onclick = () => toggleCard(i);
+                div.appendChild(c);
             });
         }
 
-        function toggleCard(idx) {
-            if(selectedCards.includes(idx)) {
-                selectedCards = selectedCards.filter(i => i !== idx);
-            } else {
-                if(selectedCards.length < currentPickReq) selectedCards.push(idx);
-            }
+        function toggleCard(i) {
+            if(selected.includes(i)) selected = selected.filter(x=>x!==i);
+            else if(selected.length < pickReq) selected.push(i);
             renderHand();
-            
             const fab = document.getElementById('fab-submit');
-            if(selectedCards.length === currentPickReq) fab.classList.remove('hidden');
+            if(selected.length === pickReq) fab.classList.remove('hidden');
             else fab.classList.add('hidden');
         }
 
         function submitCard() {
-            const text = selectedCards.map(i => hand[i]).join(" + ");
-            hand = hand.filter((_, i) => !selectedCards.includes(i));
+            const txt = selected.map(i=>hand[i]).join(" + ");
+            hand = hand.filter((_,i)=>!selected.includes(i));
             renderHand();
             document.getElementById('fab-submit').classList.add('hidden');
-            
-            if(isHost) handleGameLogic({type: 'SUBMIT', text: text}, myId);
-            else hostConn.send({type: 'SUBMIT', text: text});
+            const msg = {type:'SUBMIT', text:txt};
+            if(isHost) processGameLogic(msg, myId);
+            else hostConn.send(msg);
         }
 
         function showVoting(subs) {
-            const container = document.getElementById('voting-container');
-            container.innerHTML = '';
-            window.voteRankings = [];
+            document.getElementById('screen-voting').classList.remove('hidden');
+            const div = document.getElementById('voting-grid');
+            div.innerHTML = '';
+            window.voteRank = [];
             
-            const shuffled = [...subs].sort(() => Math.random() - 0.5);
-            window.votingRef = shuffled;
-
-            shuffled.forEach((sub, idx) => {
-                const div = document.createElement('div');
-                div.className = 'card white';
-                div.innerText = sub.text;
-                div.onclick = function() {
-                    if(window.voteRankings.includes(idx)) {
-                        window.voteRankings = window.voteRankings.filter(i => i !== idx);
-                        this.style.border = '2px solid white';
-                        this.innerHTML = sub.text;
+            // Randomize display
+            window.voteRef = [...subs].sort(()=>Math.random()-0.5);
+            
+            window.voteRef.forEach((s, idx) => {
+                const c = document.createElement('div');
+                c.className = 'card';
+                c.innerText = s.text;
+                c.onclick = function() {
+                    if(window.voteRank.includes(idx)) {
+                        window.voteRank = window.voteRank.filter(x=>x!==idx);
+                        this.style.border = 'none';
+                        this.innerText = s.text;
                     } else {
-                        window.voteRankings.push(idx);
+                        window.voteRank.push(idx);
                         this.style.border = '4px solid #03dac6';
-                        this.innerHTML = sub.text + `<div style="position:absolute; top:5px; right:5px; background:#03dac6; color:#000; width:20px; height:20px; border-radius:50%;">${window.voteRankings.length}</div>`;
+                        this.innerHTML = `${s.text} <br><b>#${window.voteRank.length}</b>`;
                     }
-                }
-                container.appendChild(div);
+                };
+                div.appendChild(c);
             });
-            document.getElementById('voting-modal').classList.remove('hidden');
         }
 
-        function submitVote() {
-            if(isHost) handleGameLogic({type: 'VOTE', votes: window.voteRankings}, myId);
-            else hostConn.send({type: 'VOTE', votes: window.voteRankings});
-            
-            document.getElementById('voting-container').innerHTML = '<h3 style="color:white">Waiting for others...</h3>';
+        function confirmVote() {
+            document.getElementById('screen-voting').classList.add('hidden');
+            const msg = {type:'VOTE', votes: window.voteRank};
+            if(isHost) processGameLogic(msg, myId);
+            else hostConn.send(msg);
+        }
+        
+        function updateScores(list) {
+            players = list;
+            const me = players.find(p=>p.id===myId);
+            if(me) document.getElementById('my-score').innerText = me.score;
         }
 
-        // --- 6. AUDIO & API ---
+        // --- 5. AUDIO & UTILS ---
 
         async function initAudio() {
             try {
                 localStream = await navigator.mediaDevices.getUserMedia({audio: true});
+                console.log("Mic Active");
             } catch(e) {
-                console.error("Audio failed", e);
+                console.error("Mic denied");
+                document.getElementById('fab-mute').style.display = 'none';
             }
-        }
-
-        function callPeer(id) {
-            if(!localStream) return;
-            const call = peer.call(id, localStream);
-            call.on('stream', s => playAudio(s));
         }
 
         function playAudio(stream) {
             const a = document.createElement('audio');
             a.srcObject = stream;
             a.autoplay = true;
-            a.playsInline = true; // IMPORTANT FOR MOBILE
+            a.playsInline = true;
             document.body.appendChild(a);
         }
 
         function toggleMute() {
-            if(localStream) {
-                const track = localStream.getAudioTracks()[0];
-                track.enabled = !track.enabled;
-                isMuted = !track.enabled;
-                
-                const btn = document.getElementById('fab-mute');
-                if(isMuted) {
-                    btn.classList.add('muted');
-                    btn.innerHTML = '<i class="fas fa-microphone-slash"></i>';
-                } else {
-                    btn.classList.remove('muted');
-                    btn.innerHTML = '<i class="fas fa-microphone"></i>';
-                }
+            if(!localStream) return;
+            const t = localStream.getAudioTracks()[0];
+            t.enabled = !t.enabled;
+            isMuted = !t.enabled;
+            const btn = document.getElementById('fab-mute');
+            if(isMuted) {
+                btn.classList.add('muted');
+                btn.innerHTML = '<i class="fas fa-microphone-slash"></i>';
+            } else {
+                btn.classList.remove('muted');
+                btn.innerHTML = '<i class="fas fa-microphone"></i>';
             }
         }
 
+        function copyLink() {
+            navigator.clipboard.writeText(document.getElementById('share-link').innerText);
+            alert("Copied!");
+        }
+
         async function generateDeck(key, x, y) {
-            const bCount = y;
-            const wCount = Math.floor((6 * x * y) / 5) + (10 * x);
-            const prompt = `Generate JSON for Cards Against Humanity (Indian Context). {"blackCards": ["..."], "whiteCards": ["..."]}. ${bCount} black cards (${Math.floor(y/5)} pick 2), ${wCount} white cards.`;
-            
-            const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }] })
+            const p = `Generate JSON for Cards Against Humanity (Indian Context). {"blackCards": ["..."], "whiteCards": ["..."]}. ${y} black cards (${Math.floor(y/5)} pick 2), ${Math.floor(6*x*y/5)+10*x} white cards.`;
+            const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`, {
+                method:'POST', headers:{'Content-Type':'application/json'},
+                body:JSON.stringify({contents:[{parts:[{text:p}]}]})
             });
-            const data = await resp.json();
-            const text = data.candidates[0].content.parts[0].text.replace(/```json|```/g, '');
-            return JSON.parse(text);
+            const d = await r.json();
+            return JSON.parse(d.candidates[0].content.parts[0].text.replace(/```json|```/g,''));
         }
     </script>
 </body>
