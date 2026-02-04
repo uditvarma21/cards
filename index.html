@@ -107,7 +107,6 @@
             <h2>Lobby</h2>
             <div id="player-count" style="font-size: 2.5rem; font-weight: bold; color: var(--success);">1</div>
             <p>Players Online</p>
-            
             <div id="player-list" style="margin: 20px 0; min-height: 50px;"></div>
 
             <div id="host-controls" class="hidden">
@@ -119,7 +118,6 @@
                     <button id="btn-start" class="btn" onclick="startGame()" disabled>Wait for Players</button>
                 </div>
             </div>
-
             <p id="client-wait" class="hidden" style="color: #888;">Waiting for Host to start...</p>
         </div>
     </div>
@@ -141,24 +139,12 @@
     </div>
 
     <script>
-        // --- GLOBAL STATE ---
-        let peer, myId, myName, hostId;
-        let isHost = false;
-        let sessionKey = "";
-        let players = []; 
-        let connections = {}; // Host: id -> conn
-        let hostConn; // Client: conn to host
-        
-        let localStream;
-        let isMuted = false;
-        
-        // Game vars
+        let peer, myId, myName, hostId, isHost = false;
+        let sessionKey = "", players = [], connections = {}, hostConn;
+        let localStream, isMuted = false;
         let hand = [], selected = [], pickReq = 1;
 
-        // --- 1. SETUP FLOW ---
-
         window.onload = () => {
-            // Check if this is a join link
             if(window.location.hash.length > 10) {
                 document.getElementById('host-form').classList.add('hidden');
                 document.getElementById('join-form').classList.remove('hidden');
@@ -170,79 +156,52 @@
             myName = document.getElementById('host-name').value.trim();
             if(!key || !myName) return alert("Fill all fields");
             
-            // Fix: Initialize Audio on CLICK
             await initAudio();
-
             sessionKey = key;
             isHost = true;
             
-            // Fix: Immediately show Lobby, Hide Setup
             document.getElementById('screen-setup').classList.add('hidden');
             document.getElementById('screen-lobby').classList.remove('hidden');
             document.getElementById('host-controls').classList.remove('hidden');
             
-            // Init Peer
             peer = new Peer();
             peer.on('open', (id) => {
                 myId = id;
                 generateLink(id);
-                // Add self to list
                 players = [{id: myId, name: myName, score: 0}];
                 renderLobby();
             });
-            
             peer.on('connection', (conn) => {
-                conn.on('open', () => {
-                    conn.on('data', (data) => handleHostData(data, conn));
-                });
+                conn.on('open', () => conn.on('data', (d) => handleHostData(d, conn)));
             });
-            
-            peer.on('call', call => {
-                call.answer(localStream);
-                call.on('stream', playAudio);
-            });
+            peer.on('call', call => { call.answer(localStream); call.on('stream', playAudio); });
         }
 
         async function startJoinFlow() {
             myName = document.getElementById('join-name').value.trim();
             if(!myName) return alert("Enter Name");
-            
-            // Fix: Initialize Audio on CLICK
             await initAudio();
 
             try {
                 const hash = window.location.hash.substring(1);
-                const decoded = atob(hash);
-                const [hId, encKey, pass] = decoded.split("::");
+                const [hId, encKey, pass] = atob(hash).split("::");
                 hostId = hId;
-                
-                // Decrypt
-                const bytes = CryptoJS.AES.decrypt(encKey, pass);
-                sessionKey = bytes.toString(CryptoJS.enc.Utf8);
+                sessionKey = CryptoJS.AES.decrypt(encKey, pass).toString(CryptoJS.enc.Utf8);
                 if(!sessionKey) throw new Error();
 
-                // Show Lobby
                 document.getElementById('screen-setup').classList.add('hidden');
                 document.getElementById('screen-lobby').classList.remove('hidden');
                 document.getElementById('client-wait').classList.remove('hidden');
 
-                // Connect
                 peer = new Peer();
                 peer.on('open', (id) => {
                     myId = id;
                     hostConn = peer.connect(hostId);
-                    hostConn.on('open', () => {
-                        hostConn.send({type: 'JOIN', name: myName, id: myId});
-                    });
+                    hostConn.on('open', () => hostConn.send({type: 'JOIN', name: myName, id: myId}));
                     hostConn.on('data', handleClientData);
                 });
-
-                peer.on('call', call => {
-                    call.answer(localStream);
-                    call.on('stream', playAudio);
-                });
-
-            } catch(e) { alert("Invalid Link or Decryption Failed"); }
+                peer.on('call', call => { call.answer(localStream); call.on('stream', playAudio); });
+            } catch(e) { alert("Invalid Link"); }
         }
 
         function generateLink(id) {
@@ -252,37 +211,24 @@
             document.getElementById('share-link').innerText = `${location.origin}${location.pathname}#${payload}`;
         }
 
-        // --- 2. HOST LOGIC ---
-
         function handleHostData(data, conn) {
             if(data.type === 'JOIN') {
                 if(!players.find(p => p.id === data.id)) {
                     players.push({id: data.id, name: data.name, score: 0});
                     connections[data.id] = conn;
-                    
-                    // Call new player for audio
                     if(localStream) peer.call(data.id, localStream);
-                    
-                    // Sync everyone
                     broadcast({type: 'LOBBY_UPDATE', players: players});
                 }
-            } else {
-                processGameLogic(data, data.id || conn.peer);
-            }
+            } else { processGameLogic(data, data.id || conn.peer); }
         }
 
         function broadcast(msg) {
-            handleClientData(msg); // Update Host UI
-            Object.values(connections).forEach(c => c.send(msg)); // Update Clients
+            handleClientData(msg);
+            Object.values(connections).forEach(c => c.send(msg));
         }
 
-        // --- 3. CLIENT LOGIC ---
-
         function handleClientData(data) {
-            if(data.type === 'LOBBY_UPDATE') {
-                players = data.players;
-                renderLobby();
-            }
+            if(data.type === 'LOBBY_UPDATE') { players = data.players; renderLobby(); }
             if(data.type === 'START_GAME') {
                 document.getElementById('screen-lobby').classList.add('hidden');
                 document.getElementById('screen-game').classList.remove('hidden');
@@ -303,7 +249,9 @@
             if(data.type === 'ROUND_RES') {
                 document.getElementById('screen-voting').classList.add('hidden');
                 alert(`Winner: ${data.winner}\n"${data.text}"`);
-                updateScores(data.scores);
+                players = data.scores;
+                const me = players.find(p => p.id === myId);
+                if(me) document.getElementById('my-score').innerText = me.score;
             }
             if(data.type === 'ADD_CARDS') { hand.push(...data.cards); renderHand(); }
             if(data.type === 'GAME_OVER') { alert("Game Over! Winner: " + data.winner.name); location.reload(); }
@@ -311,41 +259,30 @@
 
         function renderLobby() {
             document.getElementById('player-count').innerText = players.length;
-            document.getElementById('player-list').innerHTML = players.map(p => 
-                `<span class="player-badge">${p.name}</span>`
-            ).join('');
-            
-            // Update Start Button State
+            document.getElementById('player-list').innerHTML = players.map(p => `<span class="player-badge">${p.name}</span>`).join('');
             if(isHost) {
                 const btn = document.getElementById('btn-start');
-                if(players.length > 1) {
-                    btn.disabled = false;
-                    btn.innerText = "START GAME";
-                    btn.style.background = "var(--success)";
-                } else {
-                    btn.disabled = true;
-                    btn.innerText = "Wait for Players (Need 2+)";
-                    btn.style.background = "#555";
-                }
+                btn.disabled = players.length < 2;
+                btn.innerText = players.length < 2 ? "Wait for Players (Need 2+)" : "START GAME";
+                btn.style.background = players.length < 2 ? "#555" : "var(--success)";
             }
         }
-
-        // --- 4. GAMEPLAY ---
 
         function startGame() {
             const rounds = document.getElementById('rounds-input').value;
             broadcast({type: 'TOAST', msg: 'Generating...'});
-            
             generateDeck(players.length, rounds).then(deck => {
                 window.serverDeck = deck;
                 players.forEach(p => {
                     const h = deck.whiteCards.splice(0, 10);
                     const msg = {type: 'START_GAME', hand: h, rounds: rounds};
-                    if(p.id === myId) handleClientData(msg);
-                    else connections[p.id].send(msg);
+                    if(p.id === myId) handleClientData(msg); else connections[p.id].send(msg);
                 });
                 startRound(1);
-            }).catch(e => alert("API Error. Check Key."));
+            }).catch(e => {
+                console.error(e);
+                alert("API Error: " + e.message);
+            });
         }
 
         function startRound(n) {
@@ -364,15 +301,10 @@
         function processGameLogic(data, pid) {
             if(data.type === 'SUBMIT') {
                 window.submissions.push({pid: pid, text: data.text, score:0});
-                if(window.submissions.length === players.length) {
-                    broadcast({type:'VOTING_START', subs: window.submissions});
-                }
+                if(window.submissions.length === players.length) broadcast({type:'VOTING_START', subs: window.submissions});
             }
             if(data.type === 'VOTE') {
-                const z = window.submissions.length;
-                data.votes.forEach((vIdx, r) => {
-                    window.submissions[vIdx].score += (1 - (r/z));
-                });
+                data.votes.forEach((vIdx, r) => window.submissions[vIdx].score += (1 - (r/window.submissions.length)));
                 if(!window.voteCount) window.voteCount=0;
                 window.voteCount++;
                 if(window.voteCount === players.length) {
@@ -380,14 +312,11 @@
                     let wPlayer = players.find(p=>p.id===wSub.pid);
                     wPlayer.score++;
                     window.voteCount = 0;
-                    
                     players.forEach(p => {
                         const newC = window.serverDeck.whiteCards.splice(0, window.pickReqCache || 1);
                         const msg = {type:'ADD_CARDS', cards: newC};
-                        if(p.id===myId) handleClientData(msg);
-                        else connections[p.id].send(msg);
+                        if(p.id===myId) handleClientData(msg); else connections[p.id].send(msg);
                     });
-                    
                     broadcast({type:'ROUND_RES', winner:wPlayer.name, text:wSub.text, scores:players});
                     setTimeout(() => startRound(window.currRound+1), 4000);
                 }
@@ -411,8 +340,7 @@
             else if(selected.length < pickReq) selected.push(i);
             renderHand();
             const fab = document.getElementById('fab-submit');
-            if(selected.length === pickReq) fab.classList.remove('hidden');
-            else fab.classList.add('hidden');
+            if(selected.length === pickReq) fab.classList.remove('hidden'); else fab.classList.add('hidden');
         }
 
         function submitCard() {
@@ -421,8 +349,7 @@
             renderHand();
             document.getElementById('fab-submit').classList.add('hidden');
             const msg = {type:'SUBMIT', text:txt};
-            if(isHost) processGameLogic(msg, myId);
-            else hostConn.send(msg);
+            if(isHost) processGameLogic(msg, myId); else hostConn.send(msg);
         }
 
         function showVoting(subs) {
@@ -430,10 +357,7 @@
             const div = document.getElementById('voting-grid');
             div.innerHTML = '';
             window.voteRank = [];
-            
-            // Randomize display
             window.voteRef = [...subs].sort(()=>Math.random()-0.5);
-            
             window.voteRef.forEach((s, idx) => {
                 const c = document.createElement('div');
                 c.className = 'card';
@@ -441,8 +365,7 @@
                 c.onclick = function() {
                     if(window.voteRank.includes(idx)) {
                         window.voteRank = window.voteRank.filter(x=>x!==idx);
-                        this.style.border = 'none';
-                        this.innerText = s.text;
+                        this.style.border = 'none'; this.innerText = s.text;
                     } else {
                         window.voteRank.push(idx);
                         this.style.border = '4px solid #03dac6';
@@ -456,66 +379,51 @@
         function confirmVote() {
             document.getElementById('screen-voting').classList.add('hidden');
             const msg = {type:'VOTE', votes: window.voteRank};
-            if(isHost) processGameLogic(msg, myId);
-            else hostConn.send(msg);
+            if(isHost) processGameLogic(msg, myId); else hostConn.send(msg);
         }
-        
-        function updateScores(list) {
-            players = list;
-            const me = players.find(p=>p.id===myId);
-            if(me) document.getElementById('my-score').innerText = me.score;
-        }
-
-        // --- 5. AUDIO & UTILS ---
 
         async function initAudio() {
             try {
-                // Request Mic - Must happen on button click
                 localStream = await navigator.mediaDevices.getUserMedia({audio: true});
-                console.log("Mic Active");
-            } catch(e) {
-                console.error("Mic denied or error", e);
-                // Allow game to continue even without audio
-                document.getElementById('fab-mute').style.display = 'none';
-            }
+            } catch(e) { document.getElementById('fab-mute').style.display = 'none'; }
         }
-
         function playAudio(stream) {
             const a = document.createElement('audio');
-            a.srcObject = stream;
-            a.autoplay = true;
-            a.playsInline = true; // IMPORTANT FOR MOBILE
+            a.srcObject = stream; a.autoplay = true; a.playsInline = true;
             document.body.appendChild(a);
         }
-
         function toggleMute() {
             if(!localStream) return;
             const t = localStream.getAudioTracks()[0];
-            t.enabled = !t.enabled; // Toggle logic
-            isMuted = !t.enabled;
+            t.enabled = !t.enabled; isMuted = !t.enabled;
             const btn = document.getElementById('fab-mute');
-            if(isMuted) {
-                btn.classList.add('muted');
-                btn.innerHTML = '<i class="fas fa-microphone-slash"></i>';
-            } else {
-                btn.classList.remove('muted');
-                btn.innerHTML = '<i class="fas fa-microphone"></i>';
-            }
+            btn.classList.toggle('muted', isMuted);
+            btn.innerHTML = isMuted ? '<i class="fas fa-microphone-slash"></i>' : '<i class="fas fa-microphone"></i>';
         }
+        function copyLink() { navigator.clipboard.writeText(document.getElementById('share-link').innerText); alert("Copied!"); }
 
-        function copyLink() {
-            navigator.clipboard.writeText(document.getElementById('share-link').innerText);
-            alert("Copied!");
-        }
-
-        async function generateDeck(key, x, y) {
-            const p = `Generate JSON for Cards Against Humanity (Indian Context). {"blackCards": ["..."], "whiteCards": ["..."]}. ${y} black cards (${Math.floor(y/5)} pick 2), ${Math.floor(6*x*y/5)+10*x} white cards.`;
-            const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${key}`, {
-                method:'POST', headers:{'Content-Type':'application/json'},
-                body:JSON.stringify({contents:[{parts:[{text:p}]}]})
+        // --- UPDATED API CALL ---
+        async function generateDeck(x, y) {
+            const prompt = `Generate JSON for Cards Against Humanity (Indian Context). {"blackCards": ["..."], "whiteCards": ["..."]}. ${y} black cards, ${Math.floor(6*x*y/5)+10*x} white cards.`;
+            const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${sessionKey}`, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }],
+                    safetySettings: [
+                        { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
+                        { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
+                        { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
+                        { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
+                    ]
+                })
             });
-            const d = await r.json();
-            return JSON.parse(d.candidates[0].content.parts[0].text.replace(/```json|```/g,''));
+            const data = await resp.json();
+            if (data.error) throw new Error(data.error.message);
+            if (!data.candidates || data.candidates.length === 0) throw new Error("Safety Block or Empty Response");
+            
+            const text = data.candidates[0].content.parts[0].text.replace(/```json|```/g, '');
+            return JSON.parse(text);
         }
     </script>
 </body>
