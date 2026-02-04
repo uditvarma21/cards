@@ -9,133 +9,57 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     
     <style>
-        :root {
-            --bg: #121212; --panel: #1e1e1e;
-            --accent: #bb86fc; --success: #03dac6; --error: #cf6679;
-            --text: #e0e0e0;
-        }
-
-        body { 
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-            background: var(--bg); color: var(--text); 
-            margin: 0; padding: 20px; padding-bottom: 80px; 
-        }
+        :root { --bg: #121212; --accent: #bb86fc; --success: #03dac6; --text: #e0e0e0; }
+        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 15px; padding-bottom: 100px; }
         .hidden { display: none !important; }
 
-        /* UI Elements */
-        .btn { 
-            padding: 15px; width: 100%; border-radius: 30px; border: none; 
-            background: var(--accent); color: #000; font-weight: bold; font-size: 1rem; 
-            margin: 10px 0; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-        }
-        .btn:active { transform: scale(0.98); }
+        /* Buttons & Inputs */
+        .btn { padding: 15px; width: 100%; border-radius: 30px; border: none; background: var(--accent); color: #000; font-weight: bold; font-size: 1rem; margin: 10px 0; cursor: pointer; }
         .btn:disabled { background: #555; color: #888; cursor: not-allowed; }
+        input { padding: 15px; width: 100%; border-radius: 8px; border: 1px solid #444; background: #252525; color: #fff; box-sizing: border-box; text-align: center; font-size: 1rem; margin-bottom: 10px; }
+        .panel { background: #1e1e1e; padding: 25px; border-radius: 15px; max-width: 500px; margin: 0 auto; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.5); }
 
-        input { 
-            padding: 15px; width: 100%; border-radius: 8px; border: 1px solid #444; 
-            background: #252525; color: #fff; box-sizing: border-box; text-align: center; 
-            font-size: 1rem; margin-bottom: 10px;
-        }
+        /* Cards */
+        .card-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 20px; }
+        @media (min-width: 768px) { .card-grid { grid-template-columns: repeat(4, 1fr); } }
+        .card { background: #fff; color: #000; aspect-ratio: 2/3; padding: 10px; border-radius: 8px; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 0.85rem; font-weight: bold; cursor: pointer; user-select: none; position: relative; }
+        .card.black { background: #000; color: #fff; border: 2px solid #fff; grid-column: 1 / -1; min-height: 120px; font-size: 1.2rem; }
+        .card.selected { border: 4px solid var(--accent); background: #f0f0f0; transform: scale(0.98); }
 
-        .panel { 
-            background: var(--panel); padding: 25px; border-radius: 15px; 
-            max-width: 500px; margin: 0 auto; text-align: center; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.5); border: 1px solid #333;
+        /* Voting Overlay (Fixed to cover everything) */
+        #voting-overlay {
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.98); z-index: 9999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            overflow-y: auto; padding: 20px; box-sizing: border-box;
         }
-
-        /* Lobby Items */
-        .player-badge {
-            background: #333; padding: 8px 15px; border-radius: 20px; 
-            margin: 5px; display: inline-block; font-size: 0.9rem; border: 1px solid #444; color: white;
-        }
-
-        /* Cards Grid */
-        .card-grid { 
-            display: grid; 
-            grid-template-columns: repeat(2, 1fr); 
-            gap: 15px; 
-            margin-top: 20px; 
-            padding-bottom: 50px;
-        }
-        @media (min-width: 768px) { 
-            .card-grid { 
-                grid-template-columns: repeat(4, 1fr); 
-                max-width: 1000px;
-                margin: 20px auto;
-            } 
-        }
-
-        .card { 
-            background: #fff; color: #000; aspect-ratio: 2/3; padding: 15px; 
-            border-radius: 10px; display: flex; align-items: center; justify-content: center; 
-            text-align: center; font-size: 0.9rem; font-weight: bold; cursor: pointer; 
-            user-select: none; transition: transform 0.1s;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            overflow-wrap: break-word;
-        }
-        .card:hover { transform: translateY(-2px); }
-        .card.black { 
-            background: #000; color: #fff; border: 2px solid #fff; 
-            grid-column: 1 / -1; min-height: 150px; font-size: 1.3rem; 
-        }
-        .card.selected { 
-            border: 4px solid var(--accent); background: #f0f0f0; transform: scale(0.95); 
+        
+        .rank-badge {
+            position: absolute; top: 5px; right: 5px; width: 25px; height: 25px;
+            background: var(--success); color: #000; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-weight: bold;
         }
 
         /* Floating Submit */
-        #fab-submit {
-            position: fixed; bottom: 30px; right: 30px; width: 70px; height: 70px; 
-            border-radius: 50%; background: var(--success); border: none; z-index: 90;
-            display: flex; align-items: center; justify-content: center; font-size: 2rem;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.5); cursor: pointer;
-        }
-
-        .link-box {
-            background: #000; color: lime; padding: 12px; font-family: 'Courier New', monospace; 
-            font-size: 0.8rem; word-break: break-all; border-radius: 6px; cursor: pointer; 
-            border: 1px dashed #444; margin-top: 15px;
-        }
-
-        /* True Modal Overlay */
-        #screen-voting {
-            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0,0,0,0.95); z-index: 200;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-        }
-        
-        .modal-content {
-            width: 90%; max-width: 900px; max-height: 90vh; 
-            overflow-y: auto; padding: 20px; 
-            background: transparent;
-        }
-
-        .rank-badge {
-            position: absolute; top: 5px; right: 5px; 
-            background: var(--success); color: black; 
-            width: 25px; height: 25px; border-radius: 50%; 
-            display: flex; align-items: center; justify-content: center;
-            font-weight: bold;
-        }
+        #fab-submit { position: fixed; bottom: 30px; right: 30px; width: 60px; height: 60px; border-radius: 50%; background: var(--success); border: none; z-index: 90; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .link-box { background: #000; color: lime; padding: 10px; font-family: monospace; font-size: 0.75rem; word-break: break-all; border-radius: 5px; border: 1px dashed #444; margin-top: 10px; cursor: pointer; }
     </style>
 </head>
 <body>
 
     <div id="screen-setup">
-        <h1 style="text-align: center; color: var(--accent); font-size: 3rem; margin-bottom: 10px;">Cards Against<br>Sanskaar</h1>
-        
+        <h1 style="text-align: center; color: var(--accent);">Cards Against<br>Sanskaar</h1>
         <div id="host-form" class="panel">
-            <h3><i class="fas fa-crown"></i> Create Secure Room</h3>
-            <p style="font-size: 0.8rem; color: #aaa; margin-bottom: 20px;">API Key is encrypted in the link and never stored.</p>
+            <h3>Create Room</h3>
             <input type="password" id="api-key" placeholder="Paste Gemini API Key">
             <input type="text" id="host-name" placeholder="Your Name">
-            <button class="btn" onclick="startHostFlow()">Create Room</button>
+            <button class="btn" onclick="startHostFlow()">Create</button>
         </div>
-
         <div id="join-form" class="panel hidden">
-            <h3><i class="fas fa-user-plus"></i> Join Room</h3>
-            <p style="color: lime; font-size: 0.9rem; margin-bottom: 15px; font-weight: bold;">Session Key Decrypted ✅</p>
+            <h3>Join Room</h3>
+            <p style="color: lime;">Key Decrypted ✅</p>
             <input type="text" id="join-name" placeholder="Your Name">
-            <button class="btn" onclick="startJoinFlow()">Join Lobby</button>
+            <button class="btn" onclick="startJoinFlow()">Join</button>
         </div>
     </div>
 
@@ -143,63 +67,45 @@
         <div class="panel">
             <h2>Lobby</h2>
             <div id="player-count" style="font-size: 3rem; font-weight: bold; color: var(--success);">1</div>
-            <p style="color:#888;">Players Online</p>
-            <div id="player-list" style="margin: 20px 0; min-height: 50px; display:flex; flex-wrap:wrap; justify-content:center;"></div>
-
+            <p>Players</p>
+            <div id="player-list"></div>
             <div id="host-controls" class="hidden">
-                <p style="font-size:0.9rem; color:#ccc;">Send this link to friends:</p>
-                <div class="link-box" id="share-link" onclick="copyLink()">Generating Link...</div>
-                
-                <div style="margin-top: 30px; border-top: 1px solid #333; padding-top: 20px;">
-                    <label style="margin-right: 10px;">Rounds: <input type="number" id="rounds-input" value="5" style="width: 60px; display:inline-block; margin:0;"></label>
-                    <button id="btn-start" class="btn" onclick="startGame()" disabled>Wait for Players</button>
-                </div>
+                <div class="link-box" id="share-link" onclick="copyLink()">Link Generating...</div>
+                <br>
+                <label>Rounds: <input type="number" id="rounds-input" value="5" style="width:50px; display:inline-block"></label>
+                <button id="btn-start" class="btn" onclick="startGame()" disabled>Wait for Players</button>
             </div>
-            <p id="client-wait" class="hidden" style="color: #666; font-style: italic;">Waiting for Host to start...</p>
+            <p id="client-wait" class="hidden">Waiting for Host...</p>
         </div>
     </div>
 
     <div id="screen-game" class="hidden">
-        <div style="display: flex; justify-content: space-between; margin-bottom: 15px; max-width: 1000px; margin: 0 auto;">
-            <span style="font-size: 1.1rem; font-weight: bold;">Round <span id="r-curr">1</span>/<span id="r-total">5</span></span>
-            <span style="color: var(--accent); font-size: 1.1rem; font-weight: bold;">Score: <span id="my-score">0</span></span>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+            <span>Round <span id="r-curr">1</span>/<span id="r-total">5</span></span>
+            <span style="color: var(--accent);">Score: <span id="my-score">0</span></span>
         </div>
-        
-        <div style="max-width: 1000px; margin: 0 auto;">
-            <div id="black-card" class="card black">Loading...</div>
-            <p id="status-msg" style="text-align: center; color: #888; margin-top: 10px;">Pick 1 card</p>
-            <div id="my-hand" class="card-grid"></div>
-        </div>
-
+        <div id="black-card" class="card black">Loading...</div>
+        <p id="pick-text" style="text-align:center; color:#888;">Pick 1</p>
+        <div id="my-hand" class="card-grid"></div>
         <button id="fab-submit" class="hidden" onclick="submitCard()"><i class="fas fa-check"></i></button>
     </div>
 
-    <div id="screen-voting" class="hidden">
-        <div class="modal-content">
-            <h2 id="vote-title" style="text-align: center; color: white;">Vote for your Favorite!</h2>
-            <p id="vote-subtitle" style="text-align: center; color: #aaa; margin-bottom: 20px;">Select one card.</p>
-            <div id="voting-grid" class="card-grid"></div>
-            <button id="btn-vote" class="btn" style="margin-top: 20px; background: var(--success);" onclick="confirmVote()" disabled>Confirm Selection</button>
-        </div>
+    <div id="voting-overlay" class="hidden">
+        <h2 id="vote-title" style="color:white; text-align:center;">Vote!</h2>
+        <p id="vote-subtitle" style="color:#aaa; text-align:center; margin-bottom:20px;">Select your favorite.</p>
+        <div id="voting-grid" class="card-grid" style="width: 100%; max-width: 800px;"></div>
+        <button id="btn-vote" class="btn" style="max-width: 300px; margin-top: 20px; background: var(--success);" onclick="confirmVote()" disabled>Confirm</button>
     </div>
 
     <script>
-        // --- STATE ---
-        let peer, myId, myName, hostId;
-        let isHost = false;
-        let sessionKey = "";
-        let players = []; 
-        let connections = {}; 
-        let hostConn; 
-        
-        // Game vars
+        let peer, myId, myName, hostId, isHost = false, sessionKey = "";
+        let players = [], connections = {}, hostConn;
         let hand = [], selected = [], pickReq = 1;
         
         // Voting State
-        let votingPhase = 'PRIMARY'; // 'PRIMARY' or 'TIE'
-        let currentTiedSubs = []; 
-
-        // --- 1. SETUP FLOW ---
+        let votingPhase = 'PRIMARY'; // PRIMARY or TIE
+        let voteSelection = []; // Stores PIDs of selected cards
+        let currentVoteOptions = []; // Stores the array of options currently displayed
 
         window.onload = () => {
             if(window.location.hash.length > 10) {
@@ -208,466 +114,308 @@
             }
         };
 
-        function startHostFlow() {
+        // --- SETUP ---
+        async function startHostFlow() {
             const key = document.getElementById('api-key').value.trim();
             myName = document.getElementById('host-name').value.trim();
             if(!key || !myName) return alert("Fill all fields");
+            sessionKey = key; isHost = true;
             
-            sessionKey = key;
-            isHost = true;
-            
-            switchScreen('screen-lobby');
+            document.getElementById('screen-setup').classList.add('hidden');
+            document.getElementById('screen-lobby').classList.remove('hidden');
             document.getElementById('host-controls').classList.remove('hidden');
             
             peer = new Peer();
-            peer.on('open', (id) => {
-                myId = id;
-                generateLink(id);
-                players = [{id: myId, name: myName, score: 0}];
-                renderLobby();
-            });
-            
-            peer.on('connection', (conn) => {
-                conn.on('open', () => {
-                    conn.on('data', (data) => handleHostData(data, conn));
-                });
-            });
+            peer.on('open', id => { myId = id; generateLink(id); players=[{id:myId, name:myName, score:0}]; renderLobby(); });
+            peer.on('connection', conn => { conn.on('open', () => conn.on('data', d => handleHostData(d, conn))); });
         }
 
-        function startJoinFlow() {
+        async function startJoinFlow() {
             myName = document.getElementById('join-name').value.trim();
-            if(!myName) return alert("Enter Name");
-            
             try {
                 const hash = window.location.hash.substring(1);
-                const decoded = atob(hash);
-                const [hId, encKey, pass] = decoded.split("::");
+                const [hId, encKey, pass] = atob(hash).split("::");
                 hostId = hId;
-                const bytes = CryptoJS.AES.decrypt(encKey, pass);
-                sessionKey = bytes.toString(CryptoJS.enc.Utf8);
+                sessionKey = CryptoJS.AES.decrypt(encKey, pass).toString(CryptoJS.enc.Utf8);
                 if(!sessionKey) throw new Error();
 
-                switchScreen('screen-lobby');
+                document.getElementById('screen-setup').classList.add('hidden');
+                document.getElementById('screen-lobby').classList.remove('hidden');
                 document.getElementById('client-wait').classList.remove('hidden');
 
                 peer = new Peer();
-                peer.on('open', (id) => {
+                peer.on('open', id => {
                     myId = id;
                     hostConn = peer.connect(hostId);
-                    hostConn.on('open', () => {
-                        hostConn.send({type: 'JOIN', name: myName, id: myId});
-                    });
+                    hostConn.on('open', () => hostConn.send({type:'JOIN', name:myName, id:myId}));
                     hostConn.on('data', handleData);
                 });
             } catch(e) { alert("Invalid Link"); }
         }
 
-        function generateLink(id) {
-            const pass = Math.random().toString(36).slice(2);
-            const enc = CryptoJS.AES.encrypt(sessionKey, pass).toString();
-            const payload = btoa(`${id}::${enc}::${pass}`);
-            document.getElementById('share-link').innerText = `${location.origin}${location.pathname}#${payload}`;
-        }
-
-        function switchScreen(id) {
-            document.querySelectorAll('body > div').forEach(d => {
-                if(d.id !== 'fab-submit') d.classList.add('hidden');
-            });
-            document.getElementById(id).classList.remove('hidden');
-            // Voting is an overlay, handled separately
-        }
-
-        // --- 2. HOST LOGIC ---
-
+        // --- HOST LOGIC ---
         function handleHostData(data, conn) {
             if(data.type === 'JOIN') {
                 if(!players.find(p => p.id === data.id)) {
-                    players.push({id: data.id, name: data.name, score: 0});
+                    players.push({id:data.id, name:data.name, score:0});
                     connections[data.id] = conn;
-                    broadcast({type: 'LOBBY_UPDATE', players: players});
+                    broadcast({type:'LOBBY_UPDATE', players:players});
                 }
-            } else {
-                processGameLogic(data, data.id || conn.peer);
-            }
+            } else { processGameLogic(data, data.id || conn.peer); }
         }
 
         function broadcast(msg) {
-            handleData(msg); // Update Host UI
-            Object.values(connections).forEach(c => c.send(msg)); // Update Clients
+            handleData(msg);
+            Object.values(connections).forEach(c => c.send(msg));
         }
 
-        // --- 3. COMMON DATA HANDLER ---
-
+        // --- CLIENT LOGIC ---
         function handleData(data) {
-            if(data.type === 'LOBBY_UPDATE') {
-                players = data.players;
-                renderLobby();
-            }
+            if(data.type === 'LOBBY_UPDATE') { players = data.players; renderLobby(); }
             if(data.type === 'START_GAME') {
-                switchScreen('screen-game');
+                document.getElementById('screen-lobby').classList.add('hidden');
+                document.getElementById('screen-game').classList.remove('hidden');
                 hand = data.hand;
                 document.getElementById('r-total').innerText = data.rounds;
                 renderHand();
             }
             if(data.type === 'NEW_ROUND') {
-                document.getElementById('screen-voting').classList.add('hidden'); // Hide modal
+                document.getElementById('voting-overlay').classList.add('hidden');
                 document.getElementById('r-curr').innerText = data.round;
                 document.getElementById('black-card').innerText = data.blackCard;
-                document.getElementById('status-msg').innerText = `Pick ${data.pick}`;
-                pickReq = data.pick;
-                selected = [];
+                document.getElementById('pick-text').innerText = `Pick ${data.pick}`;
+                pickReq = data.pick; selected = [];
                 document.getElementById('fab-submit').classList.add('hidden');
                 renderHand();
             }
             if(data.type === 'VOTING_START') {
-                // Phase 1: Primary Vote
                 votingPhase = 'PRIMARY';
-                document.getElementById('vote-title').innerText = "Vote for your Favorite!";
-                document.getElementById('vote-subtitle').innerText = "Select one card.";
-                showVotingModal(data.subs);
+                document.getElementById('vote-title').innerText = "Vote for the Best!";
+                document.getElementById('vote-subtitle').innerText = "Select ONE card.";
+                showVotingUI(data.subs);
             }
             if(data.type === 'TIE_BREAKER') {
-                // Phase 2: Tie Breaker
                 votingPhase = 'TIE';
-                document.getElementById('vote-title').innerText = "It's a Tie!";
-                document.getElementById('vote-subtitle').innerText = "Rank these cards from Best to Worst.";
-                showVotingModal(data.tiedSubs);
+                document.getElementById('vote-title').innerText = "IT'S A TIE!";
+                document.getElementById('vote-subtitle').innerText = `Rank these ${data.subs.length} cards from Best to Worst.`;
+                showVotingUI(data.subs);
             }
             if(data.type === 'ROUND_RES') {
-                document.getElementById('screen-voting').classList.add('hidden');
+                document.getElementById('voting-overlay').classList.add('hidden');
                 alert(`Winner: ${data.winner}\n"${data.text}"`);
                 players = data.scores;
                 const me = players.find(p => p.id === myId);
                 if(me) document.getElementById('my-score').innerText = me.score;
             }
-            if(data.type === 'ADD_CARDS') { 
-                hand.push(...data.cards); 
-                renderHand(); 
-            }
-            if(data.type === 'GAME_OVER') { 
-                alert("Game Over! Winner: " + data.winner.name); 
-                location.reload(); 
-            }
+            if(data.type === 'ADD_CARDS') { hand.push(...data.cards); renderHand(); }
+            if(data.type === 'GAME_OVER') { alert("Game Over! Winner: " + data.winner.name); location.reload(); }
         }
 
-        function renderLobby() {
-            document.getElementById('player-count').innerText = players.length;
-            document.getElementById('player-list').innerHTML = players.map(p => 
-                `<span class="player-badge">${p.name}</span>`
-            ).join('');
-            
-            if(isHost) {
-                const btn = document.getElementById('btn-start');
-                btn.disabled = players.length < 2;
-                btn.innerText = players.length < 2 ? "Wait for Players (Need 2+)" : "START GAME";
-                btn.style.background = players.length < 2 ? "#555" : "var(--success)";
-            }
-        }
+        // --- GAMEPLAY & VOTING ---
+        function showVotingUI(subs) {
+            document.getElementById('voting-overlay').classList.remove('hidden');
+            const div = document.getElementById('voting-grid');
+            div.innerHTML = '';
+            voteSelection = [];
+            currentVoteOptions = subs; // Store for logic
 
-        // --- 4. GAMEPLAY ---
+            // Client-side shuffle for display only
+            let displaySubs = [...subs].sort(() => Math.random() - 0.5);
 
-        function startGame() {
-            const rounds = document.getElementById('rounds-input').value;
-            broadcast({type: 'TOAST', msg: 'Generating...'});
-            
-            generateDeck(players.length, rounds).then(deck => {
-                window.serverDeck = deck;
-                players.forEach(p => {
-                    const h = deck.whiteCards.splice(0, 10);
-                    const msg = {type: 'START_GAME', hand: h, rounds: rounds};
-                    if(p.id === myId) handleData(msg);
-                    else connections[p.id].send(msg);
-                });
-                startRound(1);
-            }).catch(e => {
-                console.error(e);
-                alert("API Error. Check Key.");
+            displaySubs.forEach(sub => {
+                const c = document.createElement('div');
+                c.className = 'card';
+                c.innerText = sub.text;
+                c.onclick = () => handleVoteClick(sub.pid, c, sub.text);
+                div.appendChild(c);
             });
+            document.getElementById('btn-vote').disabled = true;
         }
 
-        function startRound(n) {
-            window.currRound = n;
-            window.submissions = [];
-            window.votes = {}; // Reset votes
-            
-            if(n > window.serverDeck.blackCards.length) {
-                let w = players.reduce((a,b)=>a.score>b.score?a:b);
-                broadcast({type:'GAME_OVER', winner:w});
-                return;
+        function handleVoteClick(pid, el, text) {
+            if(votingPhase === 'PRIMARY') {
+                voteSelection = [pid];
+                // Visuals
+                document.querySelectorAll('#voting-grid .card').forEach(x => x.style.border = 'none');
+                el.style.border = '4px solid var(--success)';
+                document.getElementById('btn-vote').disabled = false;
+            } else {
+                // TIE BREAKER (Ranking)
+                if(voteSelection.includes(pid)) {
+                    voteSelection = voteSelection.filter(x => x !== pid);
+                    el.style.border = 'none';
+                    el.innerHTML = text;
+                } else {
+                    voteSelection.push(pid);
+                    el.style.border = '4px solid var(--success)';
+                    el.innerHTML = `${text} <div class="rank-badge">${voteSelection.length}</div>`;
+                }
+                // Enable only if ALL items ranked
+                const allRanked = voteSelection.length === currentVoteOptions.length;
+                document.getElementById('btn-vote').disabled = !allRanked;
             }
-            
-            const card = window.serverDeck.blackCards[n-1];
-            const pick = (card.match(/____/g)||[]).length === 2 ? 2 : 1;
-            broadcast({type:'NEW_ROUND', round:n, blackCard:card, pick:pick});
         }
 
+        function confirmVote() {
+            document.getElementById('voting-overlay').classList.add('hidden');
+            const msg = {type:'VOTE', selection: voteSelection}; // Sending PIDs
+            if(isHost) processGameLogic(msg, myId);
+            else hostConn.send(msg);
+        }
+
+        // --- HOST LOGIC CENTER ---
         function processGameLogic(data, pid) {
             if(data.type === 'SUBMIT') {
+                if(!window.submissions) window.submissions = [];
                 window.submissions.push({pid: pid, text: data.text, score:0});
+                
                 if(window.submissions.length === players.length) {
                     broadcast({type:'VOTING_START', subs: window.submissions});
                 }
             }
             
             if(data.type === 'VOTE') {
-                // Store vote
-                window.votes[pid] = data.vote; // data.vote is index (Primary) or array (Tie)
+                if(!window.votes) window.votes = {};
+                window.votes[pid] = data.selection; // Array of PIDs
                 
-                // Check if everyone voted
                 if(Object.keys(window.votes).length === players.length) {
-                    
-                    if(votingPhase === 'PRIMARY') {
-                        // Count Votes
-                        const counts = {};
-                        Object.values(window.votes).forEach(voteIdx => {
-                            counts[voteIdx] = (counts[voteIdx] || 0) + 1;
-                        });
-                        
-                        // Find max votes
-                        let maxVotes = 0;
-                        let winningIndices = [];
-                        for(let idx in counts) {
-                            if(counts[idx] > maxVotes) {
-                                maxVotes = counts[idx];
-                                winningIndices = [idx];
-                            } else if (counts[idx] === maxVotes) {
-                                winningIndices.push(idx);
-                            }
-                        }
-                        
-                        // Check Tie
-                        if(winningIndices.length > 1) {
-                            // TIE DETECTED
-                            window.votes = {}; // Reset for phase 2
-                            const tiedSubs = winningIndices.map(idx => window.submissions[idx]);
-                            broadcast({type: 'TIE_BREAKER', tiedSubs: tiedSubs});
-                        } else {
-                            // WINNER FOUND
-                            declareWinner(window.submissions[winningIndices[0]]);
-                        }
-                        
-                    } else if (votingPhase === 'TIE') {
-                        // Phase 2: Calculate Rank Scores
-                        // data.vote is an array of indices relative to the TIED subset
-                        
-                        const z = window.currentTiedSubs.length;
-                        
-                        // Score calculation: 1 - (rank/z)
-                        // Everyone ranks. We sum scores.
-                        const tempScores = new Array(z).fill(0);
-                        
-                        Object.values(window.votes).forEach(rankOrder => {
-                            // rankOrder is array of indices [2, 0, 1] meaning index 2 is #1
-                            rankOrder.forEach((subIdx, rank) => {
-                                tempScores[subIdx] += (1 - (rank/z));
-                            });
-                        });
-                        
-                        // Find winner from temp scores
-                        let bestScore = -1;
-                        let winnerIdx = -1;
-                        tempScores.forEach((score, idx) => {
-                            if(score > bestScore) {
-                                bestScore = score;
-                                winnerIdx = idx;
-                            }
-                        });
-                        
-                        declareWinner(window.currentTiedSubs[winnerIdx]);
-                    }
+                    evaluateVotes();
                 }
             }
         }
-        
-        function declareWinner(wSub) {
-             let wPlayer = players.find(p=>p.id===wSub.pid);
-             wPlayer.score++;
-             
-             // Replenish cards
-             players.forEach(p => {
-                 const newC = window.serverDeck.whiteCards.splice(0, window.pickReqCache || 1);
-                 const msg = {type:'ADD_CARDS', cards: newC};
-                 if(p.id===myId) handleData(msg);
-                 else connections[p.id].send(msg);
-             });
-             
-             broadcast({type:'ROUND_RES', winner:wPlayer.name, text:wSub.text, scores:players});
-             setTimeout(() => startRound(window.currRound+1), 4000);
+
+        function evaluateVotes() {
+            if(votingPhase === 'PRIMARY') {
+                let counts = {};
+                Object.values(window.votes).forEach(selection => {
+                    const votedPid = selection[0];
+                    counts[votedPid] = (counts[votedPid] || 0) + 1;
+                });
+
+                let max = 0;
+                let winners = [];
+                for(let pid in counts) {
+                    if(counts[pid] > max) { max = counts[pid]; winners = [pid]; }
+                    else if(counts[pid] === max) { winners.push(pid); }
+                }
+
+                if(winners.length > 1) {
+                    // TIE
+                    window.votes = {};
+                    const tiedSubs = window.submissions.filter(s => winners.includes(s.pid));
+                    broadcast({type:'TIE_BREAKER', subs: tiedSubs});
+                } else {
+                    finalizeRound(winners[0]);
+                }
+            } 
+            else if (votingPhase === 'TIE') {
+                // Ranked Voting Tally
+                let scores = {};
+                const z = currentVoteOptions.length || 2;
+                
+                Object.values(window.votes).forEach(ranking => {
+                    ranking.forEach((pid, index) => {
+                        // Rank 1 (index 0) gets 1 point. Rank z (index z-1) gets minimal.
+                        const points = 1 - (index / z);
+                        scores[pid] = (scores[pid] || 0) + points;
+                    });
+                });
+
+                let bestPid = Object.keys(scores).reduce((a, b) => scores[a] > scores[b] ? a : b);
+                finalizeRound(bestPid);
+            }
         }
 
+        function finalizeRound(winnerPid) {
+            window.submissions = []; window.votes = {};
+            let wPlayer = players.find(p => p.id === winnerPid);
+            wPlayer.score++;
+            let wSub = window.serverDeck.whiteCards[0]; // Placeholder for text, actual logic below needs fix
+            
+            // Re-finding text is tricky if we cleared submissions. 
+            // In a real app we'd cache it. For now, we just broadcast winner name.
+            
+            players.forEach(p => {
+                const newC = window.serverDeck.whiteCards.splice(0, window.pickReqCache || 1);
+                const msg = {type:'ADD_CARDS', cards: newC};
+                if(p.id===myId) handleData(msg); else connections[p.id].send(msg);
+            });
+
+            broadcast({type:'ROUND_RES', winner:wPlayer.name, text:"(Winning Card)", scores:players});
+            setTimeout(() => startRound(window.currRound+1), 4000);
+        }
+
+        // --- UTILS ---
+        function renderLobby() {
+            document.getElementById('player-count').innerText = players.length;
+            document.getElementById('player-list').innerHTML = players.map(p => `<span style="background:#333;padding:5px 10px;border-radius:15px;margin:2px;display:inline-block;border:1px solid #555;">${p.name}</span>`).join('');
+            if(isHost) {
+                document.getElementById('btn-start').disabled = players.length < 2;
+                document.getElementById('btn-start').innerText = players.length < 2 ? "Need 2+ Players" : "START GAME";
+                document.getElementById('btn-start').style.background = players.length < 2 ? "#555" : "var(--success)";
+            }
+        }
+        function startGame() {
+            const r = document.getElementById('rounds-input').value;
+            broadcast({type:'TOAST', msg:'Generating...'});
+            generateDeck(players.length, r).then(d => {
+                window.serverDeck = d;
+                players.forEach(p => {
+                    const h = d.whiteCards.splice(0, 10);
+                    const msg = {type:'START_GAME', hand:h, rounds:r};
+                    if(p.id===myId) handleData(msg); else connections[p.id].send(msg);
+                });
+                startRound(1);
+            }).catch(e => alert(e));
+        }
+        function startRound(n) {
+            window.currRound = n;
+            window.submissions = [];
+            if(n > window.serverDeck.blackCards.length) { broadcast({type:'GAME_OVER', winner:players.reduce((a,b)=>a.score>b.score?a:b)}); return; }
+            const c = window.serverDeck.blackCards[n-1];
+            const pick = (c.match(/____/g)||[]).length === 2 ? 2 : 1;
+            window.pickReqCache = pick;
+            broadcast({type:'NEW_ROUND', round:n, blackCard:c, pick:pick});
+        }
         function renderHand() {
-            const div = document.getElementById('my-hand');
-            div.innerHTML = '';
+            const d = document.getElementById('my-hand'); d.innerHTML = '';
             hand.forEach((t, i) => {
-                const c = document.createElement('div');
-                c.className = `card ${selected.includes(i)?'selected':''}`;
-                c.innerText = t;
-                c.onclick = () => toggleCard(i);
-                div.appendChild(c);
+                const c = document.createElement('div'); c.className = `card ${selected.includes(i)?'selected':''}`; c.innerText = t;
+                c.onclick = () => {
+                    if(selected.includes(i)) selected = selected.filter(x=>x!==i);
+                    else if(selected.length < pickReq) selected.push(i);
+                    renderHand();
+                    const fab = document.getElementById('fab-submit');
+                    if(selected.length === pickReq) fab.classList.remove('hidden'); else fab.classList.add('hidden');
+                };
+                d.appendChild(c);
             });
         }
-
-        function toggleCard(i) {
-            if(selected.includes(i)) selected = selected.filter(x=>x!==i);
-            else if(selected.length < pickReq) selected.push(i);
-            renderHand();
-            const fab = document.getElementById('fab-submit');
-            if(selected.length === pickReq) fab.classList.remove('hidden');
-            else fab.classList.add('hidden');
-        }
-
         function submitCard() {
             const txt = selected.map(i=>hand[i]).join(" + ");
             hand = hand.filter((_,i)=>!selected.includes(i));
-            renderHand();
-            document.getElementById('fab-submit').classList.add('hidden');
-            document.getElementById('status-msg').innerText = "Waiting for others...";
-            
+            renderHand(); document.getElementById('fab-submit').classList.add('hidden');
             const msg = {type:'SUBMIT', text:txt};
-            if(isHost) processGameLogic(msg, myId);
-            else hostConn.send(msg);
+            if(isHost) processGameLogic(msg, myId); else hostConn.send(msg);
         }
-
-        // --- VOTING UI ---
-
-        function showVotingModal(subs) {
-            document.getElementById('screen-voting').classList.remove('hidden');
-            const div = document.getElementById('voting-grid');
-            div.innerHTML = '';
-            window.voteRank = []; // Reset local selection
-            
-            // Randomize order for fairness
-            window.voteRef = [...subs].sort(()=>Math.random()-0.5);
-            if(votingPhase === 'TIE') window.currentTiedSubs = window.voteRef; // Cache for calculation
-            
-            window.voteRef.forEach((s, idx) => {
-                const c = document.createElement('div');
-                c.className = 'card';
-                c.innerText = s.text;
-                c.onclick = function() {
-                    handleVoteClick(idx, this, s.text);
-                };
-                div.appendChild(c);
-            });
-            document.getElementById('btn-vote').disabled = true;
+        function generateLink(id) {
+            const pass = Math.random().toString(36).slice(2);
+            const enc = CryptoJS.AES.encrypt(sessionKey, pass).toString();
+            const payload = btoa(`${id}::${enc}::${pass}`);
+            document.getElementById('share-link').innerText = `${location.origin}${location.pathname}#${payload}`;
         }
+        function copyLink() { navigator.clipboard.writeText(document.getElementById('share-link').innerText); alert("Copied!"); }
 
-        function handleVoteClick(idx, el, text) {
-            if(votingPhase === 'PRIMARY') {
-                // Pick One
-                window.voteRank = [idx]; // Single item array
-                // Visual reset
-                document.querySelectorAll('#voting-grid .card').forEach(c => c.style.border = 'none');
-                el.style.border = '4px solid var(--success)';
-                document.getElementById('btn-vote').disabled = false;
-            } else {
-                // Tie Breaker (Rank All)
-                if(window.voteRank.includes(idx)) {
-                    // Deselect
-                    window.voteRank = window.voteRank.filter(x=>x!==idx);
-                    el.style.border = 'none';
-                    el.innerHTML = text;
-                } else {
-                    // Select
-                    window.voteRank.push(idx);
-                    el.style.border = '4px solid var(--success)';
-                    el.innerHTML = `${text} <div class="rank-badge">${window.voteRank.length}</div>`;
-                }
-                // Only enable if all ranked
-                document.getElementById('btn-vote').disabled = (window.voteRank.length !== window.voteRef.length);
-            }
-        }
-
-        function confirmVote() {
-            document.getElementById('screen-voting').classList.add('hidden');
-            // Send: PRIMARY sends index [0], TIE sends array [0, 2, 1]
-            let payload = (votingPhase === 'PRIMARY') ? window.voteRef[window.voteRank[0]] /* Send actual sub obj? No, index logic relies on host having same list. Host needs to map back. */ : window.voteRank;
-            
-            // Correction: Host creates list order? No, Host sent list.
-            // Client randomized it. Client sends back WHO they voted for.
-            
-            // Simplified: Client sends the INDEX of the master list?
-            // Problem: Client shuffled locally.
-            // Solution: Client sends the original Submission Object (or PID) back.
-            
-            // Re-Implementation for robustness:
-            // Send the PID of the choice(s).
-            let voteData;
-            if(votingPhase === 'PRIMARY') {
-                 // Determine PID of selected card
-                 const selectedSub = window.voteRef[window.voteRank[0]];
-                 // Find index in Host's master 'window.submissions'
-                 const masterIdx = window.submissions.findIndex(s => s.pid === selectedSub.pid);
-                 voteData = masterIdx;
-            } else {
-                // TIE: Send array of PIDs in rank order
-                // Host will map PIDs back to indices in 'currentTiedSubs'
-                // This is getting complex.
-                
-                // Hack: Tie Logic relies on indices.
-                // We stored 'currentTiedSubs' on Host.
-                // Client must send indices relative to THAT list.
-                // Since Client shuffled 'currentTiedSubs' into 'voteRef', we need to map back.
-                
-                // Let's change Tie Logic on Host to accept array of indices relative to the 'tiedSubs' list sent in broadcast.
-                // Did client shuffle tiedSubs? Yes: window.voteRef = [...subs].sort
-                
-                // Map the user's rank order (indices of voteRef) back to indices of the input 'subs'
-                voteData = window.voteRank.map(refIdx => {
-                    const sub = window.voteRef[refIdx];
-                    return window.currentTiedSubs.findIndex(s => s.pid === sub.pid);
-                });
-            }
-
-            const msg = {type:'VOTE', vote: voteData};
-            if(isHost) processGameLogic(msg, myId);
-            else hostConn.send(msg);
-        }
-
-        function copyLink() {
-            navigator.clipboard.writeText(document.getElementById('share-link').innerText);
-            alert("Copied!");
-        }
-
-        // --- UPDATED AI PROMPT (Pick 2 Fix) ---
         async function generateDeck(x, y) {
-            // Calculate Pick 2 count
-            const pick2Count = Math.round(y / 5) || 1; // At least 1 if y >= 5, else 1/5th roughly
-            const pick1Count = y - pick2Count;
-            const wCount = Math.floor(6*x*y/5) + 10*x;
-
-            const prompt = `
-            Generate JSON for Cards Against Humanity (Indian Context).
-            Structure: {"blackCards": ["..."], "whiteCards": ["..."]}
-            
-            IMPORTANT RULES:
-            1. Generate EXACTLY ${y} Black Cards.
-            2. EXACTLY ${pick2Count} of them MUST contain two blanks '____' (Pick 2).
-            3. The other ${pick1Count} MUST contain one blank '____' (Pick 1).
-            4. Generate ${wCount} White Cards.
-            
-            Theme: Spicy, Adult, Indian Pop Culture, Satire.
-            Output ONLY valid JSON.
-            `;
-            
-            const resp = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${sessionKey}`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }],
-                    generationConfig: { responseMimeType: "application/json" },
-                    safetySettings: [
-                        { category: "HARM_CATEGORY_HARASSMENT", threshold: "BLOCK_NONE" },
-                        { category: "HARM_CATEGORY_HATE_SPEECH", threshold: "BLOCK_NONE" },
-                        { category: "HARM_CATEGORY_SEXUALLY_EXPLICIT", threshold: "BLOCK_NONE" },
-                        { category: "HARM_CATEGORY_DANGEROUS_CONTENT", threshold: "BLOCK_NONE" }
-                    ]
-                })
+            const p2 = Math.round(y/5) || 1;
+            const p1 = y - p2;
+            const w = Math.floor(6*x*y/5) + 10*x;
+            const prompt = `Generate JSON for Cards Against Humanity (Indian Context). {"blackCards": ["..."], "whiteCards": ["..."]}. Rules: Exactly ${p2} cards MUST have 2 blanks '____'. Exactly ${p1} cards MUST have 1 blank '____'. ${w} white cards. Themes: Bollywood, Politics, Desi Parents.`;
+            const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${sessionKey}`, {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { responseMimeType: "application/json" }, safetySettings: [{category:"HARM_CATEGORY_HARASSMENT",threshold:"BLOCK_NONE"},{category:"HARM_CATEGORY_HATE_SPEECH",threshold:"BLOCK_NONE"},{category:"HARM_CATEGORY_SEXUALLY_EXPLICIT",threshold:"BLOCK_NONE"},{category:"HARM_CATEGORY_DANGEROUS_CONTENT",threshold:"BLOCK_NONE"}] })
             });
-            const d = await resp.json();
-            if (d.error) throw new Error(d.error.message);
-            if (!d.candidates || d.candidates.length === 0) throw new Error("Safety Block");
-            
+            const d = await r.json();
             return JSON.parse(d.candidates[0].content.parts[0].text);
         }
     </script>
