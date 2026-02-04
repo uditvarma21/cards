@@ -49,7 +49,7 @@
             margin: 5px; display: inline-block; font-size: 0.9rem; border: 1px solid #444; color: white;
         }
 
-        /* Cards Grid - Fixed for Laptop */
+        /* Cards Grid */
         .card-grid { 
             display: grid; 
             grid-template-columns: repeat(2, 1fr); 
@@ -59,7 +59,7 @@
         }
         @media (min-width: 768px) { 
             .card-grid { 
-                grid-template-columns: repeat(4, 1fr); /* Force 4 columns on desktop */
+                grid-template-columns: repeat(4, 1fr); 
                 max-width: 1000px;
                 margin: 20px auto;
             } 
@@ -81,7 +81,6 @@
         .card.selected { 
             border: 4px solid var(--accent); background: #f0f0f0; transform: scale(0.95); 
         }
-        .card.vote-winner { border: 4px solid var(--success); box-shadow: 0 0 15px var(--success); }
 
         /* Floating Submit */
         #fab-submit {
@@ -97,12 +96,25 @@
             border: 1px dashed #444; margin-top: 15px;
         }
 
-        /* Modal Overlay */
-        #modal-overlay {
+        /* True Modal Overlay */
+        #screen-voting {
             position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-            background: rgba(0,0,0,0.92); z-index: 200;
-            display: flex; flex-direction: column; align-items: center; justify-content: flex-start;
-            padding-top: 50px; overflow-y: auto;
+            background: rgba(0,0,0,0.95); z-index: 200;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+        }
+        
+        .modal-content {
+            width: 90%; max-width: 900px; max-height: 90vh; 
+            overflow-y: auto; padding: 20px; 
+            background: transparent;
+        }
+
+        .rank-badge {
+            position: absolute; top: 5px; right: 5px; 
+            background: var(--success); color: black; 
+            width: 25px; height: 25px; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center;
+            font-weight: bold;
         }
     </style>
 </head>
@@ -162,11 +174,12 @@
         <button id="fab-submit" class="hidden" onclick="submitCard()"><i class="fas fa-check"></i></button>
     </div>
 
-    <div id="screen-voting" class="hidden" id="modal-overlay">
-        <div style="width: 90%; max-width: 800px; background: #1a1a1a; padding: 20px; border-radius: 15px; margin: 50px auto; border: 1px solid #333;">
-            <h2 style="text-align: center; color: white;">Vote for the best!</h2>
+    <div id="screen-voting" class="hidden">
+        <div class="modal-content">
+            <h2 id="vote-title" style="text-align: center; color: white;">Vote for your Favorite!</h2>
+            <p id="vote-subtitle" style="text-align: center; color: #aaa; margin-bottom: 20px;">Select one card.</p>
             <div id="voting-grid" class="card-grid"></div>
-            <button id="btn-vote" class="btn" style="margin-top: 20px; background: var(--success);" onclick="confirmVote()" disabled>Select a Card to Vote</button>
+            <button id="btn-vote" class="btn" style="margin-top: 20px; background: var(--success);" onclick="confirmVote()" disabled>Confirm Selection</button>
         </div>
     </div>
 
@@ -176,11 +189,15 @@
         let isHost = false;
         let sessionKey = "";
         let players = []; 
-        let connections = {}; // Host: id -> conn
-        let hostConn; // Client: conn to host
+        let connections = {}; 
+        let hostConn; 
         
         // Game vars
         let hand = [], selected = [], pickReq = 1;
+        
+        // Voting State
+        let votingPhase = 'PRIMARY'; // 'PRIMARY' or 'TIE'
+        let currentTiedSubs = []; 
 
         // --- 1. SETUP FLOW ---
 
@@ -199,9 +216,7 @@
             sessionKey = key;
             isHost = true;
             
-            // Switch UI immediately
-            document.getElementById('screen-setup').classList.add('hidden');
-            document.getElementById('screen-lobby').classList.remove('hidden');
+            switchScreen('screen-lobby');
             document.getElementById('host-controls').classList.remove('hidden');
             
             peer = new Peer();
@@ -232,8 +247,7 @@
                 sessionKey = bytes.toString(CryptoJS.enc.Utf8);
                 if(!sessionKey) throw new Error();
 
-                document.getElementById('screen-setup').classList.add('hidden');
-                document.getElementById('screen-lobby').classList.remove('hidden');
+                switchScreen('screen-lobby');
                 document.getElementById('client-wait').classList.remove('hidden');
 
                 peer = new Peer();
@@ -255,6 +269,14 @@
             document.getElementById('share-link').innerText = `${location.origin}${location.pathname}#${payload}`;
         }
 
+        function switchScreen(id) {
+            document.querySelectorAll('body > div').forEach(d => {
+                if(d.id !== 'fab-submit') d.classList.add('hidden');
+            });
+            document.getElementById(id).classList.remove('hidden');
+            // Voting is an overlay, handled separately
+        }
+
         // --- 2. HOST LOGIC ---
 
         function handleHostData(data, conn) {
@@ -274,28 +296,21 @@
             Object.values(connections).forEach(c => c.send(msg)); // Update Clients
         }
 
-        // --- 3. COMMON DATA HANDLER (Syncs UI) ---
+        // --- 3. COMMON DATA HANDLER ---
 
         function handleData(data) {
-            console.log("Received:", data.type); // Debug
-
             if(data.type === 'LOBBY_UPDATE') {
                 players = data.players;
                 renderLobby();
             }
             if(data.type === 'START_GAME') {
-                document.getElementById('screen-lobby').classList.add('hidden');
-                document.getElementById('screen-game').classList.remove('hidden');
+                switchScreen('screen-game');
                 hand = data.hand;
                 document.getElementById('r-total').innerText = data.rounds;
                 renderHand();
             }
             if(data.type === 'NEW_ROUND') {
-                // Ensure Voting is HIDDEN
-                const v = document.getElementById('screen-voting');
-                v.classList.add('hidden');
-                v.style.display = 'none'; // Force hide
-                
+                document.getElementById('screen-voting').classList.add('hidden'); // Hide modal
                 document.getElementById('r-curr').innerText = data.round;
                 document.getElementById('black-card').innerText = data.blackCard;
                 document.getElementById('status-msg').innerText = `Pick ${data.pick}`;
@@ -305,13 +320,21 @@
                 renderHand();
             }
             if(data.type === 'VOTING_START') {
-                showVoting(data.subs);
+                // Phase 1: Primary Vote
+                votingPhase = 'PRIMARY';
+                document.getElementById('vote-title').innerText = "Vote for your Favorite!";
+                document.getElementById('vote-subtitle').innerText = "Select one card.";
+                showVotingModal(data.subs);
+            }
+            if(data.type === 'TIE_BREAKER') {
+                // Phase 2: Tie Breaker
+                votingPhase = 'TIE';
+                document.getElementById('vote-title').innerText = "It's a Tie!";
+                document.getElementById('vote-subtitle').innerText = "Rank these cards from Best to Worst.";
+                showVotingModal(data.tiedSubs);
             }
             if(data.type === 'ROUND_RES') {
-                const v = document.getElementById('screen-voting');
-                v.classList.add('hidden');
-                v.style.display = 'none';
-                
+                document.getElementById('screen-voting').classList.add('hidden');
                 alert(`Winner: ${data.winner}\n"${data.text}"`);
                 players = data.scores;
                 const me = players.find(p => p.id === myId);
@@ -365,6 +388,7 @@
         function startRound(n) {
             window.currRound = n;
             window.submissions = [];
+            window.votes = {}; // Reset votes
             
             if(n > window.serverDeck.blackCards.length) {
                 let w = players.reduce((a,b)=>a.score>b.score?a:b);
@@ -384,35 +408,91 @@
                     broadcast({type:'VOTING_START', subs: window.submissions});
                 }
             }
+            
             if(data.type === 'VOTE') {
-                const z = window.submissions.length;
-                data.votes.forEach((vIdx, r) => {
-                    window.submissions[vIdx].score += (1 - (r/z));
-                });
+                // Store vote
+                window.votes[pid] = data.vote; // data.vote is index (Primary) or array (Tie)
                 
-                if(!window.voteCount) window.voteCount=0;
-                window.voteCount++;
-                
-                if(window.voteCount === players.length) {
-                    let wSub = window.submissions.reduce((a,b)=>a.score>b.score?a:b);
-                    let wPlayer = players.find(p=>p.id===wSub.pid);
-                    wPlayer.score++;
-                    window.voteCount = 0;
+                // Check if everyone voted
+                if(Object.keys(window.votes).length === players.length) {
                     
-                    // Deal cards
-                    players.forEach(p => {
-                        const newC = window.serverDeck.whiteCards.splice(0, window.pickReqCache || 1);
-                        const msg = {type:'ADD_CARDS', cards: newC};
-                        if(p.id===myId) handleData(msg);
-                        else connections[p.id].send(msg);
-                    });
-                    
-                    broadcast({type:'ROUND_RES', winner:wPlayer.name, text:wSub.text, scores:players});
-                    
-                    // Fixed Timer for Next Round
-                    setTimeout(() => startRound(window.currRound+1), 4000);
+                    if(votingPhase === 'PRIMARY') {
+                        // Count Votes
+                        const counts = {};
+                        Object.values(window.votes).forEach(voteIdx => {
+                            counts[voteIdx] = (counts[voteIdx] || 0) + 1;
+                        });
+                        
+                        // Find max votes
+                        let maxVotes = 0;
+                        let winningIndices = [];
+                        for(let idx in counts) {
+                            if(counts[idx] > maxVotes) {
+                                maxVotes = counts[idx];
+                                winningIndices = [idx];
+                            } else if (counts[idx] === maxVotes) {
+                                winningIndices.push(idx);
+                            }
+                        }
+                        
+                        // Check Tie
+                        if(winningIndices.length > 1) {
+                            // TIE DETECTED
+                            window.votes = {}; // Reset for phase 2
+                            const tiedSubs = winningIndices.map(idx => window.submissions[idx]);
+                            broadcast({type: 'TIE_BREAKER', tiedSubs: tiedSubs});
+                        } else {
+                            // WINNER FOUND
+                            declareWinner(window.submissions[winningIndices[0]]);
+                        }
+                        
+                    } else if (votingPhase === 'TIE') {
+                        // Phase 2: Calculate Rank Scores
+                        // data.vote is an array of indices relative to the TIED subset
+                        
+                        const z = window.currentTiedSubs.length;
+                        
+                        // Score calculation: 1 - (rank/z)
+                        // Everyone ranks. We sum scores.
+                        const tempScores = new Array(z).fill(0);
+                        
+                        Object.values(window.votes).forEach(rankOrder => {
+                            // rankOrder is array of indices [2, 0, 1] meaning index 2 is #1
+                            rankOrder.forEach((subIdx, rank) => {
+                                tempScores[subIdx] += (1 - (rank/z));
+                            });
+                        });
+                        
+                        // Find winner from temp scores
+                        let bestScore = -1;
+                        let winnerIdx = -1;
+                        tempScores.forEach((score, idx) => {
+                            if(score > bestScore) {
+                                bestScore = score;
+                                winnerIdx = idx;
+                            }
+                        });
+                        
+                        declareWinner(window.currentTiedSubs[winnerIdx]);
+                    }
                 }
             }
+        }
+        
+        function declareWinner(wSub) {
+             let wPlayer = players.find(p=>p.id===wSub.pid);
+             wPlayer.score++;
+             
+             // Replenish cards
+             players.forEach(p => {
+                 const newC = window.serverDeck.whiteCards.splice(0, window.pickReqCache || 1);
+                 const msg = {type:'ADD_CARDS', cards: newC};
+                 if(p.id===myId) handleData(msg);
+                 else connections[p.id].send(msg);
+             });
+             
+             broadcast({type:'ROUND_RES', winner:wPlayer.name, text:wSub.text, scores:players});
+             setTimeout(() => startRound(window.currRound+1), 4000);
         }
 
         function renderHand() {
@@ -448,43 +528,98 @@
             else hostConn.send(msg);
         }
 
-        function showVoting(subs) {
-            // Force Show Modal
-            const modal = document.getElementById('screen-voting');
-            modal.classList.remove('hidden');
-            modal.style.display = 'flex'; // Ensure flex layout
-            
+        // --- VOTING UI ---
+
+        function showVotingModal(subs) {
+            document.getElementById('screen-voting').classList.remove('hidden');
             const div = document.getElementById('voting-grid');
             div.innerHTML = '';
-            window.voteRank = [];
+            window.voteRank = []; // Reset local selection
             
-            // Randomize
+            // Randomize order for fairness
             window.voteRef = [...subs].sort(()=>Math.random()-0.5);
+            if(votingPhase === 'TIE') window.currentTiedSubs = window.voteRef; // Cache for calculation
             
             window.voteRef.forEach((s, idx) => {
                 const c = document.createElement('div');
                 c.className = 'card';
                 c.innerText = s.text;
                 c.onclick = function() {
-                    if(window.voteRank.includes(idx)) {
-                        window.voteRank = window.voteRank.filter(x=>x!==idx);
-                        this.style.border = 'none';
-                        this.innerText = s.text;
-                    } else {
-                        window.voteRank.push(idx);
-                        this.style.border = '4px solid #03dac6';
-                        this.innerHTML = `${s.text} <br><b>#${window.voteRank.length}</b>`;
-                    }
-                    // Enable confirm button if at least one selected
-                    document.getElementById('btn-vote').disabled = (window.voteRank.length === 0);
+                    handleVoteClick(idx, this, s.text);
                 };
                 div.appendChild(c);
             });
+            document.getElementById('btn-vote').disabled = true;
+        }
+
+        function handleVoteClick(idx, el, text) {
+            if(votingPhase === 'PRIMARY') {
+                // Pick One
+                window.voteRank = [idx]; // Single item array
+                // Visual reset
+                document.querySelectorAll('#voting-grid .card').forEach(c => c.style.border = 'none');
+                el.style.border = '4px solid var(--success)';
+                document.getElementById('btn-vote').disabled = false;
+            } else {
+                // Tie Breaker (Rank All)
+                if(window.voteRank.includes(idx)) {
+                    // Deselect
+                    window.voteRank = window.voteRank.filter(x=>x!==idx);
+                    el.style.border = 'none';
+                    el.innerHTML = text;
+                } else {
+                    // Select
+                    window.voteRank.push(idx);
+                    el.style.border = '4px solid var(--success)';
+                    el.innerHTML = `${text} <div class="rank-badge">${window.voteRank.length}</div>`;
+                }
+                // Only enable if all ranked
+                document.getElementById('btn-vote').disabled = (window.voteRank.length !== window.voteRef.length);
+            }
         }
 
         function confirmVote() {
-            document.getElementById('screen-voting').style.display = 'none'; // Hide locally
-            const msg = {type:'VOTE', votes: window.voteRank};
+            document.getElementById('screen-voting').classList.add('hidden');
+            // Send: PRIMARY sends index [0], TIE sends array [0, 2, 1]
+            let payload = (votingPhase === 'PRIMARY') ? window.voteRef[window.voteRank[0]] /* Send actual sub obj? No, index logic relies on host having same list. Host needs to map back. */ : window.voteRank;
+            
+            // Correction: Host creates list order? No, Host sent list.
+            // Client randomized it. Client sends back WHO they voted for.
+            
+            // Simplified: Client sends the INDEX of the master list?
+            // Problem: Client shuffled locally.
+            // Solution: Client sends the original Submission Object (or PID) back.
+            
+            // Re-Implementation for robustness:
+            // Send the PID of the choice(s).
+            let voteData;
+            if(votingPhase === 'PRIMARY') {
+                 // Determine PID of selected card
+                 const selectedSub = window.voteRef[window.voteRank[0]];
+                 // Find index in Host's master 'window.submissions'
+                 const masterIdx = window.submissions.findIndex(s => s.pid === selectedSub.pid);
+                 voteData = masterIdx;
+            } else {
+                // TIE: Send array of PIDs in rank order
+                // Host will map PIDs back to indices in 'currentTiedSubs'
+                // This is getting complex.
+                
+                // Hack: Tie Logic relies on indices.
+                // We stored 'currentTiedSubs' on Host.
+                // Client must send indices relative to THAT list.
+                // Since Client shuffled 'currentTiedSubs' into 'voteRef', we need to map back.
+                
+                // Let's change Tie Logic on Host to accept array of indices relative to the 'tiedSubs' list sent in broadcast.
+                // Did client shuffle tiedSubs? Yes: window.voteRef = [...subs].sort
+                
+                // Map the user's rank order (indices of voteRef) back to indices of the input 'subs'
+                voteData = window.voteRank.map(refIdx => {
+                    const sub = window.voteRef[refIdx];
+                    return window.currentTiedSubs.findIndex(s => s.pid === sub.pid);
+                });
+            }
+
+            const msg = {type:'VOTE', vote: voteData};
             if(isHost) processGameLogic(msg, myId);
             else hostConn.send(msg);
         }
@@ -494,15 +629,24 @@
             alert("Copied!");
         }
 
-        // --- UPDATED AI PROMPT (SPICY & INDIAN) ---
+        // --- UPDATED AI PROMPT (Pick 2 Fix) ---
         async function generateDeck(x, y) {
+            // Calculate Pick 2 count
+            const pick2Count = Math.round(y / 5) || 1; // At least 1 if y >= 5, else 1/5th roughly
+            const pick1Count = y - pick2Count;
+            const wCount = Math.floor(6*x*y/5) + 10*x;
+
             const prompt = `
-            Generate a valid JSON object for "Cards Against Humanity" tailored for an Indian Audience.
-            Theme: Adult, Dark Humor, Satirical, Gen Z, Bollywood Cringe, Indian Politics, Desi Parents, Corporate Slavery.
-            Tone: Mocking, Spicy, Offensive (but clever), Hinglish allowed.
-            Structure: {"blackCards": ["Prompt..."], "whiteCards": ["Answer..."]}
-            Quantity: ${y} black cards (include ${Math.floor(y/5)} 'pick 2' cards with 2 blanks '____'), ${Math.floor(6*x*y/5)+10*x} white cards.
-            Examples: "Sharmaji ka beta", "Bangalore traffic", "Modiji's mic", "Dating apps in India".
+            Generate JSON for Cards Against Humanity (Indian Context).
+            Structure: {"blackCards": ["..."], "whiteCards": ["..."]}
+            
+            IMPORTANT RULES:
+            1. Generate EXACTLY ${y} Black Cards.
+            2. EXACTLY ${pick2Count} of them MUST contain two blanks '____' (Pick 2).
+            3. The other ${pick1Count} MUST contain one blank '____' (Pick 1).
+            4. Generate ${wCount} White Cards.
+            
+            Theme: Spicy, Adult, Indian Pop Culture, Satire.
             Output ONLY valid JSON.
             `;
             
